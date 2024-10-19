@@ -11,6 +11,27 @@ const Tab = createBottomTabNavigator();
 function BottomNavigate() {
   return (
     <Tab.Navigator>
+      <Tab.Screen name="Home" component={EmployeeHome}         
+      options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              top:  0,
+              width:  25,
+              height:  25,
+              padding: focused ? 8 : 0,
+              borderRadius: 5,
+              backgroundColor: focused ? '#001B48' : '#FFFFFF', // Change background color based on focus
+            }}>
+              <Image
+                source={require('../public/homenew.png')}
+                style={{ width: size, height: size, tintColor: focused ? '#FFFFFF' : '#001B48' }} // Change icon tint color based on focus
+              />
+            </View>
+          ),
+          headerShown: false
+        }} />
             <Tab.Screen name="Expenses" component={Expenses} options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={{
@@ -53,27 +74,7 @@ function BottomNavigate() {
           headerShown: false
         }}  />
 
-        <Tab.Screen name="Home" component={EmployeeHome}         
-      options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <View style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              top:  0,
-              width:  25,
-              height:  25,
-              padding: focused ? 8 : 0,
-              borderRadius: 5,
-              backgroundColor: focused ? '#001B48' : '#FFFFFF', // Change background color based on focus
-            }}>
-              <Image
-                source={require('../public/homenew.png')}
-                style={{ width: size, height: size, tintColor: focused ? '#FFFFFF' : '#001B48' }} // Change icon tint color based on focus
-              />
-            </View>
-          ),
-          headerShown: false
-        }} />
+        
                       <Tab.Screen name="Enquiry" component={EnquiryManagement} options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={{

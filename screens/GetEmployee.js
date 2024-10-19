@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Text, FlatList, ActivityIndicator, TextInput, Button, Modal, TouchableOpacity } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
-
+import tw from 'twrnc';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const GetEmployee = () => {
     const [vendors, setVendors] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +28,7 @@ const GetEmployee = () => {
     useEffect(() => {
         const fetchVendorData = async () => {
             try {
-                const response = await fetch('http://20.197.21.104/employee/getEmployee?phone=8104450592');
+                const response = await fetch('https://sangramindustry-i5ws.onrender.com/employee/getEmployee?phone=8104450592');
                 if (response.ok) {
                     const data = await response.json();
                     setVendors(data.result);
@@ -41,6 +42,8 @@ const GetEmployee = () => {
                 setLoading(false);
             }
         };
+        
+
 
         fetchVendorData();
     }, []);
@@ -64,7 +67,7 @@ const GetEmployee = () => {
 
     const handleAddEmployee = async () => {
         try {
-            const response = await fetch('http://20.197.21.104/employee/addEmployee', {
+            const response = await fetch('https://sangramindustry-i5ws.onrender.com/employee/addEmployee', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -151,15 +154,15 @@ const GetEmployee = () => {
     }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.filterContainer}>
+        <View style={tw`flex mt-5 bg-[f5f5f5]`}>
+            <View style={tw`p-2.5 m-2 bg-white rounded-xl mb-5 shadow-md flex flex-row items-center`}>
                 <TextInput
                     style={styles.input}
                     placeholder="Search"
                     value={searchQuery}
                     onChangeText={text => setSearchQuery(text)}
                 />
-                <Button title="Search" onPress={handleSearch} color="#001b78" />
+                <Button title="Search" onPress={handleSearch} style={tw`rounded-xl `} />
             </View>
             <Button title="Add Employee" onPress={() => setModalVisible(true)} color="#001b78" />
             <ScrollView horizontal={true} style={styles.scrollContainer}>

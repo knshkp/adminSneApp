@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { Table, Row, Rows } from 'react-native-table-component';
-
+import { Dropdown } from 'react-native-element-dropdown';
 const EmployeeServicesAll = () => {
   const [employeeData, setEmployeeData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@ const EmployeeServicesAll = () => {
   // Function to fetch employee data from the API
   const fetchEmployeeData = async () => {
     try {
-      const response = await axios.get('http://20.197.21.104/employeeServices/getEmployee?phone=9694668873');
+      const response = await axios.get('https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployee?phone=9694668873');
       if (response.data && response.data.result) {
         setEmployeeData(response.data.result);
 

@@ -22,7 +22,7 @@ const ExpenseItem = ({ expense }) => (
   </Card>
 );
 
-const  = () => {
+const  Profile= () => {
   const [employeeDetail, setEmployeeDetail] = useState('');
   const [amountOfSales, setAmountOfSales] = useState(0);
   const [amountOfService, setAmountOfService] = useState('');

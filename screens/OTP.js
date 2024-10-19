@@ -18,18 +18,25 @@ const OTPScreen = ({ navigation }) => {
 
   const handleOTPChange = (index, value) => {
     const newOTP = [...otp];
+    if (value === '' && newOTP[index] === '' && index > 0) {
+      otpTextInputRefs.current[index - 1].focus();  
+    }
+    
     newOTP[index] = value;
     setOTP(newOTP);
-
     if (value && index < otp.length - 1) {
       otpTextInputRefs.current[index + 1].focus();
     }
   };
+  
 
   const handleSubmit = () => {
     const enteredOTP = otp.join('');
     if (enteredOTP === '123456') {
-      navigation.navigate('AdminBottomNavigate');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'AdminBottomNavigate' }], // Navigating to OTP screen
+      });
     } else {
       // Handle incorrect OTP scenario
     }

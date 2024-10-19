@@ -2,7 +2,8 @@ import React from 'react';
 import { ScrollView, View, Image, StyleSheet } from 'react-native';
 import { Avatar, Title, Caption, Text, Button, IconButton, Colors } from 'react-native-paper';
 import ghuman from '../public/ghuman.png'
-const Profile = () => {
+import AdminLogin from './AdminLogin';
+const Profile = ({navigation}) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -39,8 +40,8 @@ const Profile = () => {
         </Button>
         <Button 
           mode="contained" 
-          onPress={() => {}}
-          color="#192841"
+          onPress={() => {{navigation.navigate('MainLog');}}}
+          color="#00072D"
           style={styles.button}
         >
           Log Out

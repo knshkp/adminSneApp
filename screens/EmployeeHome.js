@@ -6,6 +6,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
+import tw from 'twrnc';
+import { Dropdown } from 'react-native-element-dropdown';
 const EmployeeHome = () => {
     const [vendors, setVendors] = useState([]);
     const [items, setItems] = useState([
@@ -35,6 +37,7 @@ const EmployeeHome = () => {
     const [dairy,setDairy]=useState('');
     const [machine,setMachine]=useState('');
     const [shop,setShop]=useState('')
+    const [details,setDetails]=useState([]);
     const addApi = async () => {
         const employeeDetails=await AsyncStorage.getItem('employeeDetails')
         const finalEmployee=JSON.parse(employeeDetails)
@@ -55,7 +58,7 @@ const EmployeeHome = () => {
         console.log(body)
       
         try {
-          const response = await axios.post('http://20.197.21.104/employeeServices/addEmployeeService', body, {
+          const response = await axios.post('https://sangramindustry-i5ws.onrender.com/employeeServices/addEmployeeService', body, {
             headers: {
               'Content-Type': 'application/json',
             },
@@ -73,7 +76,7 @@ const EmployeeHome = () => {
         
         const fetchVendorData = async () => {
             try {
-                const response = await fetch('http://20.197.21.104/employee/getEmployee?phone=8104450592');
+                const response = await fetch('https://sangramindustry-i5ws.onrender.com/employee/getEmployee?phone=8104450592');
                 if (response.ok) {
                     const data = await response.json();
                     setVendors(data.result);
@@ -86,7 +89,10 @@ const EmployeeHome = () => {
         };
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://20.197.21.104:3000/shop/get_product');
+                const employeeDetails=await AsyncStorage.getItem('employeeDetails');
+                console.log(`vendor name is ${details}`)
+                setDetails(employeeDetails);
+                const response = await fetch('https://sangramindustry-i5ws.onrender.com/shop/get_product');
                 if (response.ok) {
                     const data = await response.json();
                     const categoryItems = data.data.data.map(cat => ({ label: cat.category, value: cat.category }));
@@ -99,6 +105,7 @@ const EmployeeHome = () => {
                 console.error('Error:', error);
             }
         };
+        console.log(details);
 
         fetchVendorData();
         fetchCategories();
@@ -140,6 +147,7 @@ const EmployeeHome = () => {
         if (activeTab === 'Sales') {
             return (
                 <>
+                <Text>Hi </Text>
                     <View style={styles.dateTimeContainer}>
                         <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
                         <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>
@@ -170,16 +178,14 @@ const EmployeeHome = () => {
                         value={address}
                         onChangeText={setAddress}
                     />
-                    <DropDownPicker
-                        open={open}
-                        value={category}
-                        items={categoryItems}
-                        setOpen={setOpen}
-                        setValue={setCategory}
-                        setItems={setCategoryItems}
+                    <Dropdown
+                        data={category}
+                        labelField="label"
+                        valueField="value"
                         placeholder="Select Category"
+                        value={category}
+                        onChange={item => setCategory(item)}
                         style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
                     />
                     {category && (
                         <DropDownPicker
@@ -190,7 +196,6 @@ const EmployeeHome = () => {
                             setValue={setProduct}
                             setItems={setProductItems}
                             propogateSwipe={true}
-                            
                             placeholder="Select Product"
                             style={styles.dropdown}
                             dropDownContainerStyle={styles.dropdownContainer}
@@ -224,6 +229,7 @@ const EmployeeHome = () => {
         } else if (activeTab === 'Service') {
             return (
                 <>
+                
                     <View style={styles.dateTimeContainer}>
                         <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
                         <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>
@@ -323,6 +329,7 @@ const EmployeeHome = () => {
         } else if (activeTab === 'Marketing') {
             return (
                 <>
+                <Text style={tw`font-bold text-black ml-6`}>Hi</Text>
                 <View style={styles.dateTimeContainer}>
                         <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
                         <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>

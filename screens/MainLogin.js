@@ -1,96 +1,42 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-
+import tw from 'twrnc';
 const MainLog = ({ navigation }) => {
     return (
-        <View style={styles.container}>
+        <View style={tw`flex justify-center items-center bg-white`}>
             <Image
                 source={require('./../public/logo.jpeg')}
-                style={styles.logo}
+                style={tw`w-80 h-80 drop-shadow-lg`}
             />
-            <Text style={styles.title}>SNE COMPANY APP</Text>
-            <Text style={styles.description}>
+            <Text style={tw`text-xl text-[#00072D] drop-shadow-2xl antialised font-bold`}>SNE COMPANY APP</Text>
+            <Text style={tw`text-black mx-20 text-center mt-5`}>
                 With this app, you can start to track your employees.</Text>
-
             <TouchableOpacity
-                style={styles.button}
+                style={tw`bg-[#00072D] w-65 py-4 item-center rounded-full drop-shadow-lg mt-18`}
                 onPress={() => {
                     navigation.navigate('AdminLogin');
                 }}
             >
-                <Text style={styles.buttonText}>Admin Login</Text>
+                <Text style={tw`fw-bold text-white text-center text-lg `}>Admin Login</Text>
             </TouchableOpacity>
             <TouchableOpacity
-                style={[styles.button,styles.loginButton]}
+                style={tw`w-65 py-4 item-center rounded-full drop-shadow-lg border-2 mt-6`}
                 onPress={() => {
                     navigation.navigate('AdminLogin');
                 }}
             >
-                <Text style={styles.buttonTexts}>Office Login</Text>
+                <Text style={tw`text-[#00072D] text-lg text-center font-bold`}>Office Login</Text>
             </TouchableOpacity>
             <TouchableOpacity
-                style={styles.button}
+                style={tw`w-65 py-4 item-center rounded-full drop-shadow-lg border-2 mt-6 bg-[#00072D]` }
                 onPress={() => {
                     navigation.navigate('Login');
                 }}
             >
-                <Text style={styles.buttonText}>Employee Login</Text>
+                <Text style={tw`text-center text-white text-lg`}>Employee Login</Text>
             </TouchableOpacity>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    logo: {
-        width: 300,
-        height: 350,
-        marginTop: 20,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginTop: 50,
-        color: '#001b48',
-        textAlign: 'center',
-    },
-    description: {
-        marginVertical: 20,
-        marginHorizontal: 60,
-        textAlign: 'center',
-        color: '#000',
-    },
-    button: {
-        backgroundColor: '#001b48',
-        paddingVertical: 15,
-        paddingHorizontal: 40,
-        borderRadius: 30,
-        marginTop: 20,
-        width: 250,
-        alignItems: 'center',
-    },
-    loginButton: {
-        backgroundColor: '#fff',
-        borderColor: '#001b48',
-        borderWidth: 2,
-        marginTop: 20,
-        color:'#c8a883'
-    },
-    buttonText: {
-        color: '#f0f0f0',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    buttonTexts: {
-        color: '#001b48',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-});
 
 export default MainLog;

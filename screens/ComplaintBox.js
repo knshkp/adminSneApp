@@ -15,7 +15,7 @@ const TaskManagement = () => {
         try {
             const employeeDetails = await AsyncStorage.getItem('employeeDetails');
             const employeeDetail = JSON.parse(employeeDetails);
-            const response = await axios.get(`http://20.197.21.104/employeeServices/getEmployeeComplaint?phone=${employeeDetail[0].phone}`);
+            const response = await axios.get(`https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployeeComplaint?phone=${employeeDetail[0].phone}`);
             setTasks(response.data.result);
         } catch (error) {
             console.error('Error fetching tasks:', error);
@@ -41,7 +41,7 @@ const TaskManagement = () => {
                 subGroup:newTask.subGroup
             };
 
-            await axios.post('http://20.197.21.104/employeeServices/addEmplohyeeComplaint', body, {
+            await axios.post('https://sangramindustry-i5ws.onrender.com/employeeServices/addEmplohyeeComplaint', body, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -69,7 +69,7 @@ const TaskManagement = () => {
             };
             console.log(`>>>>>>>>bvody>>>>${JSON.stringify(body)}`)
 
-            await axios.post('http://20.197.21.104/employeeServices/updateEmployeeComplaint', body, {
+            await axios.post('https://sangramindustry-i5ws.onrender.com/employeeServices/updateEmployeeComplaint', body, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -94,7 +94,7 @@ const TaskManagement = () => {
             };
             console.log(`>>>>>>>>bvody>>>>${JSON.stringify(body)}`)
 
-            await axios.post('http://20.197.21.104/employeeServices/updateEmployeeComplaint', body, {
+            await axios.post('https://sangramindustry-i5ws.onrender.com/employeeServices/updateEmployeeComplaint', body, {
                 headers: {
                     'Content-Type': 'application/json',
                 },

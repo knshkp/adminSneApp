@@ -1,37 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, Button, TextInput, Modal, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet,Modal,TextInput, Alert, TouchableOpacity } from 'react-native';
 import axios from 'axios';
-import { launchImageLibrary } from 'react-native-image-picker'; // Import image picker
-import { Picker } from '@react-native-picker/picker'; // Import Picker for Dropdown
+import { launchImageLibrary } from 'react-native-image-picker';
+import tw from 'twrnc';
+import { Picker } from '@react-native-picker/picker';
 
 const AdminProductScreen = () => {
-  const [categories, setCategories] = useState([]); // State to store categories
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [productDetailModalVisible, setProductDetailModalVisible] = useState(false); // State for product details modal
-  const [selectedProduct, setSelectedProduct] = useState(null); // State for selected product details
+  const [productDetailModalVisible, setProductDetailModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
     dealer_price: '',
     discount: '',
-    category_id: '662090170ce92b50f6ce80ea', // State to store selected category ID
+    category_id: '662090170ce92b50f6ce80ea',
     description: '',
     is_dealerProducts: 0,
     product_count: '',
   });
-  const [productImage, setProductImage] = useState(null); // State to store the selected image
+  const [productImage, setProductImage] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
-    fetchCategories(); // Fetch categories when component mounts
+    fetchCategories();
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    if (selectedCategory) {
+      const filtered = products.filter((product) => product.category === selectedCategory);
+      console.log(filtered[0].product)
+      setFilteredProducts(filtered[0].product);
+    } else {
+      setFilteredProducts(products);
+    }
+  }, [selectedCategory, products]);
+
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://20.197.21.104/shop/get_product');
-      if (response.data.data.success) {
-        setCategories(response.data.data.data); // Update state based on the API response structure
-      }
+      const response = await axios.get('https://sangramindustry-i5ws.onrender.com/shop/get_product');
+      setProducts(response.data.data.data);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
@@ -39,13 +51,12 @@ const AdminProductScreen = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://20.197.21.104/shop/get_category');
-      setCategories(response.data); // Set categories from API response
+      const response = await axios.get('https://sangramindustry-i5ws.onrender.com/shop/get_category');
+      setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
-
   const handleAddProduct = async () => {
     console.log(`>>>>>>>>>>>>`, newProduct);
     console.log(`>>>>>>>>`, productImage);
@@ -82,7 +93,6 @@ const AdminProductScreen = () => {
       type: productImage.type,
       name: productImage.fileName || 'image.jpg'
     });
-    console.log(`>>>>>>formData>>>>`, formData);
 
     try {
       const response = await axios.post('http://20.197.21.104/shop/add_product', formData, {
@@ -102,6 +112,7 @@ const AdminProductScreen = () => {
     }
   };
 
+
   const selectImage = () => {
     launchImageLibrary({ mediaType: 'photo' }, (response) => {
       if (response.didCancel) {
@@ -111,7 +122,7 @@ const AdminProductScreen = () => {
       } else {
         const { assets } = response;
         if (assets && assets.length > 0) {
-          setProductImage(assets[0]); // Set the selected image
+          setProductImage(assets[0]);
         }
       }
     });
@@ -123,42 +134,47 @@ const AdminProductScreen = () => {
   };
 
   const renderProduct = ({ item }) => (
-    <TouchableOpacity style={styles.productContainer} onPress={() => handleProductPress(item)}>
-      <Image source={{ uri: item.productImage }} style={styles.productImage} />
-      <Text style={styles.productName}>{item.product_name}</Text>
-      <Text style={styles.productPrice}>₹{item.product_price}</Text>
+    <TouchableOpacity style={tw`m-2 h-60 p-4 bg-white items-center rounded-lg w-38` } onPress={() => handleProductPress(item)}>
+      <Image source={{ uri: item.productImage }} style={tw`h-20 w-20 `} />
+      <Text style={tw`font-bold text-black mt-8`}>{item.product_name}</Text>
+      <Text style={styles.productPrice}>Price: ₹{item.product_price}</Text>
       <Text style={styles.productDiscount}>Discount: {item.discount}%</Text>
     </TouchableOpacity>
   );
 
   const renderCategory = ({ item }) => (
-    <View style={styles.categoryContainer}>
-      <Text style={styles.categoryName}>{item.category}</Text>
-      <Image source={{ uri: item.bannerImage }} style={styles.bannerImage} />
+    <TouchableOpacity
+      style={[
+        tw`padding-10 px-2 py-2 border-2 rounded-full border-double h-24 mt-6 mr-2 `,
+        selectedCategory === item.category && tw`padding-10 px-2 py-2 border-2 rounded-full border-double h-24 mt-6 mr-2 border-blue-500`
+      ]}
+      onPress={() => setSelectedCategory(item.category)}
+    >
+      <Image source={{ uri: item.categoryImage }} style={tw`h-20 w-20 rounded-full`} />
+    </TouchableOpacity>
+  );
+
+  return (
+    <>
+      <View style={tw`flex-1 justify-center item-center`}>
+        <FlatList
+          data={categories}
+          renderItem={renderCategory}
+          keyExtractor={(category) => category.category}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        />
+      </View>
       <FlatList
-        data={item.product}
+        data={filteredProducts}
         renderItem={renderProduct}
         keyExtractor={(product) => product.product_name}
         horizontal
         showsHorizontalScrollIndicator={false}
       />
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={categories}
-        renderItem={renderCategory}
-        keyExtractor={(category) => category.category}
-      />
-
-      {/* Add Product Button */}
-      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.addButtonText}>Add Product</Text>
+      <TouchableOpacity onPress={() => setModalVisible(true)} style={tw`bg-blue-500 mb-10 mx-5 py-3 rounded-lg`}>
+        <Text style={tw`text-white font-bold text-center`}>Add Product</Text>
       </TouchableOpacity>
-
-      {/* Add Product Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -265,7 +281,7 @@ const AdminProductScreen = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </>
   );
 };
 

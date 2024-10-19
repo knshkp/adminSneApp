@@ -25,6 +25,7 @@
     "react-native": "0.74.3",
     "react-native-document-picker": "^9.3.0",
     "react-native-dropdown-picker": "^5.4.6",
+    "react-native-element-dropdown": "^2.12.1",
     "react-native-image-picker": "^7.1.2",
     "react-native-paper": "^5.12.3",
     "react-native-picker-select": "^9.3.1",
@@ -32,6 +33,7 @@
     "react-native-screens": "^3.32.0",
     "react-native-swiper": "^1.6.0",
     "react-native-table-component": "^1.2.2",
+    "twilio": "^5.3.1",
     "twrnc": "^4.5.1"
   },
   "devDependencies": {

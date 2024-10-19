@@ -12,7 +12,7 @@ const ExpenseItem = ({ expense, onImagePress }) => (
     {expense.photo && (
       <TouchableOpacity onPress={() => onImagePress(`${expense.photo}`)}>
         <Text>Show Bill</Text>
-        <Image source={{ uri: `http://20.197.21.104:3000/${expense.photo}` }} style={styles.image} />
+        <Image source={{ uri: `https://sangramindustry-i5ws.onrender.com:3000/${expense.photo}` }} style={styles.image} />
       </TouchableOpacity>
     )}
   </View>
@@ -35,7 +35,7 @@ const Expenses = () => {
   const fetchExpenses = () => {
     setLoading(true);
     axios
-      .get('http://20.197.21.104:3000/employee/getExpense')
+      .get('https://sangramindustry-i5ws.onrender.com:3000/employee/getExpense')
       .then((response) => {
         setExpenses(response.data);
         console.log(response.data[0])
@@ -68,7 +68,7 @@ const Expenses = () => {
     const config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'http://20.197.21.104:3000/shop/addExpense',
+      url: 'https://sangramindustry-i5ws.onrender.com:3000/shop/addExpense',
       headers: { 
         'Content-Type': 'multipart/form-data',
       },

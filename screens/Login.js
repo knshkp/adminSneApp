@@ -8,15 +8,20 @@ const Login = ({ navigation }) => {
   const [error, setError] = useState(null);
 
   const handleLogin = async () => {
+    console.log(`>>>>>>>>>`)
     if (phoneNumber.length < 10) {
       setError("Phone Number is incomplete");
       return;
     }
+    console.log(`>>>>>>`)
 
     try {
-      const response = await axios.post('http://20.197.21.104:3000/employee/loginEmployee', {
+      console.log(`>>>>>>>>${phoneNumber}`)
+      const response = await axios.post('https://sangramindustry-i5ws.onrender.com/employee/loginEmployee', {
         phone: phoneNumber
       });
+      console.log( `>>>>>fnhrsiugfijrkf>>>>${response.data}`);
+      console.log(response);
       if (response.data.result) {
         await AsyncStorage.setItem('employeeDetails', JSON.stringify(response.data.result));
         navigation.navigate('BottomNavigation');
@@ -24,6 +29,7 @@ const Login = ({ navigation }) => {
         setError(response.data.message || 'Login failed');
       }
     } catch (error) {
+      console.error(error)
       setError('An error occurred. Please try again.');
     }
   };

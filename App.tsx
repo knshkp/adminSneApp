@@ -17,6 +17,7 @@ import Profile from './screens/Profile';
 import AdminBottomNavigate from './screens/AdminBottomNavigation';
 import DetailScreen from './screens/DetailEmployeeScreen';
 import EmployeeServicesAll from './screens/AllServiceScreen';
+import AdminProductScreen from './screens/GetProduct';
 
 const Stack = createNativeStackNavigator();
 
@@ -92,6 +93,11 @@ function App() {
           <Stack.Screen
           name="DetailScreen"
           component={DetailScreen}
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen
+          name="AdminProduct"
+          component={AdminProductScreen}
           options={{ headerShown: false }} 
         />
       </Stack.Navigator>
