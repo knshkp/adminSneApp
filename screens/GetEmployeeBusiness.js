@@ -3,12 +3,7 @@ import { View, ScrollView, StyleSheet, Text, FlatList, ActivityIndicator, TextIn
 import { useNavigation } from "@react-navigation/native";
 import tw from 'twrnc';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DownloadTableExcel } from 'react-export-table-to-excel';
-import { useRef } from 'react';
-import RNFS from 'react-native-fs';
-import XLSX from 'xlsx';
-
-const GetEmployee = () => {
+const GetEmployeeBusiness = () => {
     const [vendors, setVendors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -28,27 +23,6 @@ const GetEmployee = () => {
         state: '',
         upi: ''
     });
-    const exportToExcel = () => {
-        const data = vendors.map((vendor, index) => ({
-            id: index + 1,
-            vendor_name: vendor.vendor_name,
-            phone_number: vendor.phone_number,
-            city: vendor.city,
-            state: vendor.state,
-        }));
-    
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-    
-        const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
-
-        RNFS.writeFile(`${RNFS.DownloadDirectoryPath}/EmployeeData.xlsx`, wbout, 'base64')
-          .then(() => console.log(`${RNFS.DownloadDirectoryPath}/EmployeeData.xlsx`))
-          .catch(error => console.log('Error saving file:', error));
-        
-    };
-    
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -130,9 +104,9 @@ const GetEmployee = () => {
             <View style={[styles.cell, { width: 120 }]}>
                 <Text style={styles.cellText}>{item.vendor_name}</Text>
             </View>
-            <View style={[styles.cell, { width: 120 }]}>
+            {/* <View style={[styles.cell, { width: 120 }]}>
                 <Text style={styles.cellText}>{item.phone_number}</Text>
-            </View>
+            </View> */}
             <View style={[styles.cell, { width: 120 }]}>
                 <Text style={styles.cellText}>{item.phone_number}</Text>
             </View>
@@ -183,37 +157,29 @@ const GetEmployee = () => {
     return (
         
         <View style={tw`flex mt-5 `}>
-            <View style={tw`p-2.5 m-2 bg-white rounded-xl shadow-md flex flex-row items-center`}>
+            <View style={tw`p-2.5 m-2 bg-white rounded-xl mb-5 shadow-md flex flex-row items-center`}>
                 <TextInput
                     style={styles.input}
                     placeholder="Search"
                     value={searchQuery}
                     onChangeText={text => setSearchQuery(text)}
                 />
-                <Button title="🔍" onPress={handleSearch} color="#f0f0f0" />
+                <Button title="Search" onPress={handleSearch} color="#092147" />
             </View>
-            <View style={tw`p-2.5  bg-white rounded-xl shadow-md flex flex-row `}>
-            <TouchableOpacity title="Add Employee" onPress={() => setModalVisible(true)} style={tw`bg-[#092147] h-10 rounded-full mr-5`} ><Text style={tw`text-white font-bold m-2`}>Add Employee</Text></TouchableOpacity>
-            <TouchableOpacity onPress={exportToExcel} style={tw`bg-[#092147] h-10 ml-25 rounded-full`}>
-                <Text style={tw`text-white font-bold mt-2 mx-2`}>Export to Excel</Text>
-            </TouchableOpacity>
-            </View>
-
-
+            <Button title="Add Employee" onPress={() => setModalVisible(true)} color="#092147" />
             <ScrollView horizontal={true} style={styles.scrollContainer}>
-            <View>
-
+                <View>
                     <View style={styles.header}>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Name</Text>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Number</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Sales</Text>
+                        {/* <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Sales</Text>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Service</Text>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Enquiry</Text>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Complaint</Text>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Marketing</Text>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Today Total Amount</Text>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Pending Amount</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Submitted Amount</Text>
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Submitted Amount</Text> */}
                         <Text style={[styles.cell, styles.headerCell, { width: 100 }]}>Details</Text>
 
                     </View>
@@ -225,7 +191,6 @@ const GetEmployee = () => {
                         />
                     </ScrollView>
                 </View>
-
             </ScrollView>
             <Modal
                 visible={isModalVisible}
@@ -436,4 +401,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default GetEmployee;
+export default GetEmployeeBusiness;

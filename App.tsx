@@ -18,6 +18,8 @@ import AdminBottomNavigate from './screens/AdminBottomNavigation';
 import DetailScreen from './screens/DetailEmployeeScreen';
 import EmployeeServicesAll from './screens/AllServiceScreen';
 import AdminProductScreen from './screens/GetProduct';
+import EmployeeTable from './screens/EmployeeReport';
+import GetEmployeeBusiness from './screens/GetEmployeeBusiness';
 
 const Stack = createNativeStackNavigator();
 
@@ -99,6 +101,15 @@ function App() {
           name="AdminProduct"
           component={AdminProductScreen}
           options={{ headerShown: false }} 
+        />
+        <Stack.Screen
+          name="GetEmployeeBusiness"
+          component={GetEmployeeBusiness}
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen
+          name="EmployeeServicesTable"
+          component={EmployeeTable} 
         />
       </Stack.Navigator>
     </NavigationContainer>

@@ -7,6 +7,7 @@ const AdminLogin = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showPassword,setShowPassword] = useState(false);
   const handleLogin = () => {
     if (phoneNumber === '8104450592' && password === 'Sangram@1234') {
       navigation.reset({
@@ -33,14 +34,23 @@ const AdminLogin = ({ navigation }) => {
           maxLength={10}
         />
         <Text style={tw`text-left text-lg font-bold text-[#00072D] ml-2 mt-6`}>Password</Text>
-        <TextInput
-          style={tw`bg-[#f0f0f0] border-2 rounded-2xl border-[#f0f0f0] mt-4 p-3`}
-          placeholder="Enter Your Password"
-          placeholderTextColor="#888"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={true}
-        />
+        
+        <View style={tw`relative`}>
+  <TextInput
+    style={tw`bg-[#f0f0f0] border-2 rounded-2xl border-[#f0f0f0] mt-4 p-3 pr-12`}
+    placeholder="Enter Your Password"
+    placeholderTextColor="#888"
+    value={password}
+    onChangeText={setPassword}
+    secureTextEntry={!showPassword} // Toggle password visibility
+  />
+  <TouchableOpacity
+    style={tw`absolute right-4 top-6`}
+    onPress={() => setShowPassword(!showPassword)}
+  >
+    <Text style={tw`text-xl text-[#888]`}>{showPassword ? '🙈' : '👁️'}</Text>
+  </TouchableOpacity>
+</View>
         <TouchableOpacity
           style={tw`bg-[#00072D] mt-60 items-center py-4 rounded-full`}
           onPress={handleLogin}
@@ -54,7 +64,7 @@ const AdminLogin = ({ navigation }) => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={tw`flex items-center bg-#[f0f0f0]/15 justify-center place-self-center mt-60`}>
+        <View style={tw`flex items-center bg-#[f0f0f0]justify-center  mt-60`}>
           <View style={tw`bg-[#fff] shadow-2xl shadow-blue-500/50 rounded-lg p-5 items-center w-10/12`}>
             <Text style={tw`mb-10 text-lg text-[#00072D] font-bold`}>{errorMessage}</Text>
             <Pressable

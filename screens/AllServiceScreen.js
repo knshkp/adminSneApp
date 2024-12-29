@@ -15,6 +15,7 @@ const EmployeeServicesAll = () => {
     try {
       const response = await axios.get('https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployee?phone=9694668873');
       if (response.data && response.data.result) {
+        console.log(response.data)
         setEmployeeData(response.data.result);
 
         // Prepare data for the table
@@ -29,6 +30,7 @@ const EmployeeServicesAll = () => {
           `Rs. ${item.final_price}`,
           item.payment_method,
           item.service_type,
+          item.seller_phone
         ]);
 
         setTableData(data);
@@ -88,7 +90,7 @@ const EmployeeServicesAll = () => {
             <View style={styles.tableContainer}>
               <Table borderStyle={styles.tableBorder}>
                 <Row
-                  data={['Customer Name', 'Phone', 'Address', 'Category', 'Product', 'Price', 'Discount', 'Final Price', 'Payment', 'Service Type']}
+                  data={['Customer Name', 'Phone', 'Address', 'Category', 'Product', 'Price', 'Discount', 'Final Price', 'Payment', 'Service Type',"Seller Phone"]}
                   style={styles.header}
                   textStyle={styles.headerText}
                 />

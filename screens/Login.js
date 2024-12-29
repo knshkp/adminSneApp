@@ -1,27 +1,28 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false); // Manage loading state
 
   const handleLogin = async () => {
-    console.log(`>>>>>>>>>`)
+    console.log(`>>>>>>phomne`)
     if (phoneNumber.length < 10) {
       setError("Phone Number is incomplete");
       return;
     }
-    console.log(`>>>>>>`)
+
+    setLoading(true); // Start loading
+    setError(null); // Clear previous errors
 
     try {
-      console.log(`>>>>>>>>${phoneNumber}`)
       const response = await axios.post('https://sangramindustry-i5ws.onrender.com/employee/loginEmployee', {
         phone: phoneNumber
       });
-      console.log( `>>>>>fnhrsiugfijrkf>>>>${response.data}`);
-      console.log(response);
+
       if (response.data.result) {
         await AsyncStorage.setItem('employeeDetails', JSON.stringify(response.data.result));
         navigation.navigate('BottomNavigation');
@@ -29,8 +30,10 @@ const Login = ({ navigation }) => {
         setError(response.data.message || 'Login failed');
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
       setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -53,8 +56,12 @@ const Login = ({ navigation }) => {
             maxLength={10}
           />
           {error && <Text style={styles.errorText}>{error}</Text>}
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Login</Text>
+          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Login</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

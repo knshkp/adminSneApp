@@ -8,6 +8,8 @@ import { Alert } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import tw from 'twrnc';
 import { Dropdown } from 'react-native-element-dropdown';
+import { Image } from 'react-native';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 const EmployeeHome = () => {
     const [vendors, setVendors] = useState([]);
     const [items, setItems] = useState([
@@ -71,6 +73,42 @@ const EmployeeHome = () => {
           console.error('There was a problem with the axios operation:', error);
         }
       };
+      const addMarketingEntry = async () => {
+        const employeeDetails=await AsyncStorage.getItem('employeeDetails')
+        const finalEmployee=JSON.parse(employeeDetails)
+        const body = {
+          seller_phone: finalEmployee[0].phone_number,
+          customer_name: customerName,
+          customer_phone: mobileNumber,
+          customer_address: address,
+          customer_state:state,
+          customer_city:city,
+          customer_pincode:pin,
+          category_name: category,
+          product_name: product,
+          product_price: price,
+          discount: discount,
+          final_price: price - (discount * price) / 100,
+          payment_method: paymentSelect,
+          service_type: activeTab,
+          shop_name:shop
+        };
+        console.log(body)
+      
+        try {
+          const response = await axios.post('https://sangramindustry-i5ws.onrender.com/employeeServices/addEmployeeService', body, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          Alert.alert('Employee Details Added')
+      
+          console.log(`>>>>>>ewsponese${response.data}`);
+        } catch (error) {
+            Alert.alert('Detail Not Added')
+          console.error('There was a problem with the axios operation:', error);
+        }
+      };
 
     useEffect(() => {
         
@@ -116,6 +154,11 @@ const EmployeeHome = () => {
             setAddress('');
             setCustomerName('');
             setShop('');
+            setProduct("");
+            setMobileNumber("");
+            setPrice("");
+            setDiscount("");
+            setPaymentSelect("");
         }
         updateEntry()
     },[activeTab]);
@@ -147,7 +190,7 @@ const EmployeeHome = () => {
         if (activeTab === 'Sales') {
             return (
                 <>
-                <Text>Hi </Text>
+                {/* <Text>Hi </Text>
                     <View style={styles.dateTimeContainer}>
                         <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
                         <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>
@@ -155,7 +198,7 @@ const EmployeeHome = () => {
                     <View style={styles.dateTimeContainer}>
                         <Text style={{marginLeft:12}}>Name</Text>
                         <Text style={{marginRight:120}}> Phone</Text>
-                    </View>
+                    </View> */}
                     <View style={styles.dateTimeContainer}>
                     <TextInput
                         style={styles.inputs}
@@ -178,14 +221,16 @@ const EmployeeHome = () => {
                         value={address}
                         onChangeText={setAddress}
                     />
-                    <Dropdown
-                        data={category}
-                        labelField="label"
-                        valueField="value"
-                        placeholder="Select Category"
+                    <DropDownPicker
+                        open={openCategory}
                         value={category}
-                        onChange={item => setCategory(item)}
+                        items={categoryItems}
+                        setOpen={setOpenCategory}
+                        setValue={setCategory}
+                        setItems={setCategoryItems}
+                        placeholder="Select Category"
                         style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
                     />
                     {category && (
                         <DropDownPicker
@@ -230,14 +275,14 @@ const EmployeeHome = () => {
             return (
                 <>
                 
-                    <View style={styles.dateTimeContainer}>
+                    {/* <View style={styles.dateTimeContainer}>
                         <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
                         <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>
                     </View>
                     <View style={styles.dateTimeContainer}>
                         <Text style={{marginLeft:12}}>Name</Text>
                         <Text style={{marginRight:120}}> Phone</Text>
-                    </View>
+                    </View> */}
                     <View style={styles.dateTimeContainer}>
                     <TextInput
                         style={styles.inputs}
@@ -249,6 +294,7 @@ const EmployeeHome = () => {
                         style={styles.inputs}
                         placeholder="Mobile Number"
                         keyboardType="phone-pad"
+                        maxLength={10}
                         value={mobileNumber}
                         onChangeText={setMobileNumber}
                     />
@@ -260,10 +306,10 @@ const EmployeeHome = () => {
                         onChangeText={setAddress}
                     />
                     <DropDownPicker
-                        open={open}
+                        open={openCategory}
                         value={category}
                         items={categoryItems}
-                        setOpen={setOpen}
+                        setOpen={setOpenCategory}
                         setValue={setCategory}
                         setItems={setCategoryItems}
                         placeholder="Select Category"
@@ -297,7 +343,7 @@ const EmployeeHome = () => {
                     {product && (
                         <Text style={styles.priceText}>Final Price: {price - (discount * price) / 100}</Text>
                     )}
-      <DropDownPicker
+      {product&&<DropDownPicker
         open={open}
         value={paymentSelect}
         items={items}
@@ -307,16 +353,16 @@ const EmployeeHome = () => {
         placeholder="Select Payment Method"
         style={styles.dropdown}
         dropDownContainerStyle={styles.dropdownContainer}
-      />
+      />}
 
       {/* Conditional Rendering for QR Code when "UPI" is selected */}
       {paymentSelect === 'upi' && (
-        <View style={styles.qrContainer}>
+        <View>
           <Text style={styles.qrText}>Scan this QR code to pay via UPI:</Text>
-          {/* <Image
-            source={require('./path_to_your_qr_image.png')}  // Replace with your QR code image path
-            style={styles.qrImage}
-          /> */}
+          <Image
+            source={{uri:"https://imgs.search.brave.com/mNOSUEuvzvmR_GB5ndP8qE_R1mFIUliIU4pn-oDjIEk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jMS5p/bWcycXIuY29tL2lt/YWdlcy9zaW1wbGVf/cXJjb2RlLnBuZz94/LW9zcy1wcm9jZXNz/PWltYWdlL3F1YWxp/dHksUV84MA"}}  // Replace with your QR code image path
+            style={tw`h-40 w-40 mx-24`}
+          />
         </View>
       )}
 
@@ -329,7 +375,7 @@ const EmployeeHome = () => {
         } else if (activeTab === 'Marketing') {
             return (
                 <>
-                <Text style={tw`font-bold text-black ml-6`}>Hi</Text>
+                {/* <Text style={tw`font-bold text-black ml-6`}>Hi</Text>
                 <View style={styles.dateTimeContainer}>
                         <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
                         <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>
@@ -337,7 +383,7 @@ const EmployeeHome = () => {
                     <View style={styles.dateTimeContainer}>
                         <Text style={{marginLeft:12}}>Name</Text>
                         <Text style={{marginRight:120}}> Phone</Text>
-                    </View>
+                    </View> */}
                     <View style={styles.dateTimeContainer}>
                     <TextInput
                         style={styles.inputs}
@@ -354,6 +400,17 @@ const EmployeeHome = () => {
                         onChangeText={setMobileNumber}
                     />
                     </View>
+                    <DropDownPicker
+                        open={openCategory}
+                        value={category}
+                        items={categoryItems}
+                        setOpen={setOpenCategory}
+                        setValue={setCategory}
+                        setItems={setCategoryItems}
+                        placeholder="Select Category"
+                        style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
+                    />
                     <TextInput
                         style={styles.input}
                         placeholder="Shop Name"
@@ -388,7 +445,7 @@ const EmployeeHome = () => {
                         keyboardType='phone-pad'
                         onChangeText={setPin}
                     />
-                    <TextInput
+                    {/* <TextInput
                         style={styles.input}
                         placeholder="Description"
                         value={address}
@@ -399,18 +456,8 @@ const EmployeeHome = () => {
                         placeholder="Machine"
                         value={city}
                         onChangeText={setCity}
-                    />
-                    <DropDownPicker
-                        open={open}
-                        value={category}
-                        items={categoryItems}
-                        setOpen={setOpen}
-                        setValue={setCategory}
-                        setItems={setCategoryItems}
-                        placeholder="Select Category"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
-                    />
+                    /> */}
+
                     {category && (
                         <DropDownPicker
                             open={openProduct}
@@ -425,7 +472,18 @@ const EmployeeHome = () => {
                             dropDownContainerStyle={styles.dropdownContainer}
                         />
                     )}
-                    <TouchableOpacity style={styles.button}>
+                    {product&&<DropDownPicker
+                        open={open}
+                        value={paymentSelect}
+                        items={items}
+                        setOpen={setOpen}
+                        setValue={setPaymentSelect}
+                        setItems={setItems}
+                        placeholder="Select Payment Method"
+                        style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
+                    />}
+                    <TouchableOpacity style={styles.button} onPress={addMarketingEntry}>
                         <Text style={styles.buttonText}>Submit</Text>
                     </TouchableOpacity>
                     </>
@@ -433,40 +491,43 @@ const EmployeeHome = () => {
         }
     };
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.tabContainer}>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'Sales' && styles.activeTab]}
-                    onPress={() => setActiveTab('Sales')}
+        return (
+            <>
+                <View
+                    contentContainerStyle={styles.container}
+                    keyboardShouldPersistTaps="handled"
+                    horizontal={false}
                 >
-                    <Text style={styles.tabText}>Sales</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'Marketing' && styles.activeTab]}
-                    onPress={() => setActiveTab('Marketing')}
-                >
-                    <Text style={styles.tabText}>Marketing</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'Service' && styles.activeTab]}
-                    onPress={() => setActiveTab('Service')}
-                >
-                    <Text style={styles.tabText}>Service</Text>
-                </TouchableOpacity>
-
-            </View>
-            <ScrollView nestedScrollEnabled={true} contentContainerStyle={styles.scrollContainer}>
-                {renderContent()}
-            </ScrollView>
-        </View>
-    );
+                    <View style={tw`flex-row m-2 ml-4`}>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'Sales' && styles.activeTab]}
+                            onPress={() => setActiveTab('Sales')}
+                        >
+                            <Text style={styles.tabText}>Sales</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'Marketing' && styles.activeTab]}
+                            onPress={() => setActiveTab('Marketing')}
+                        >
+                            <Text style={styles.tabText}>Marketing</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'Service' && styles.activeTab]}
+                            onPress={() => setActiveTab('Service')}
+                        >
+                            <Text style={styles.tabText}>Service</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View>{renderContent()}</View>
+                </View>
+                </>
+        );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#fff',
     },
     scrollContainer: {
         paddingVertical: 20,
@@ -518,7 +579,8 @@ const styles = StyleSheet.create({
         fontWeight:'bold'
     },
     dropdown: {
-        marginBottom: 20,
+        marginBottom: 10,
+        marginTop:10,
         borderRadius: 10,
         marginHorizontal:10,
         marginRight:10,
@@ -533,7 +595,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 15,
-        padding: 15,
+        paddingHorizontal: 5,
         marginHorizontal:10,
         marginTop: 5,
         marginBottom: 10,
@@ -550,10 +612,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 15,
-        padding: 15,
-        marginTop: 5,
         marginHorizontal:10,
-        marginBottom: 10,
+        marginBottom: 5,
+        paddingHorizontal:5,
         color: "#333",
         backgroundColor: '#fff',
         width: '45%',
@@ -570,11 +631,10 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: '#192841',
-        paddingVertical: 15,
+        paddingVertical: 10,
         borderRadius: 30,
         alignItems: 'center',
-        marginTop: 20,
-        marginHorizontal:10,
+        marginHorizontal:10
     },
     buttonText: {
         color: '#fff',

@@ -8,19 +8,19 @@ const MainLog = ({ navigation }) => {
                 source={require('./../public/logo.jpeg')}
                 style={tw`w-80 h-80 drop-shadow-lg`}
             />
-            <Text style={tw`text-xl text-[#00072D] drop-shadow-2xl antialised font-bold`}>SNE COMPANY APP</Text>
+            <Text style={tw`text-xl text-[#00072D] font-bold`}>SNE COMPANY APP</Text>
             <Text style={tw`text-black mx-20 text-center mt-5`}>
                 With this app, you can start to track your employees.</Text>
             <TouchableOpacity
-                style={tw`bg-[#00072D] w-65 py-4 item-center rounded-full drop-shadow-lg mt-18`}
+                style={tw`bg-[#00072D] w-65 py-4 rounded-full drop-shadow-lg mt-18`}
                 onPress={() => {
                     navigation.navigate('AdminLogin');
                 }}
             >
-                <Text style={tw`fw-bold text-white text-center text-lg `}>Admin Login</Text>
+                <Text style={tw`font-bold text-white text-center text-lg `}>Admin Login</Text>
             </TouchableOpacity>
             <TouchableOpacity
-                style={tw`w-65 py-4 item-center rounded-full drop-shadow-lg border-2 mt-6`}
+                style={tw`w-65 py-4 rounded-full drop-shadow-lg border-2 mt-6`}
                 onPress={() => {
                     navigation.navigate('AdminLogin');
                 }}
@@ -28,7 +28,7 @@ const MainLog = ({ navigation }) => {
                 <Text style={tw`text-[#00072D] text-lg text-center font-bold`}>Office Login</Text>
             </TouchableOpacity>
             <TouchableOpacity
-                style={tw`w-65 py-4 item-center rounded-full drop-shadow-lg border-2 mt-6 bg-[#00072D]` }
+                style={tw`w-65 py-4 rounded-full drop-shadow-lg border-2 mt-6 bg-[#00072D]` }
                 onPress={() => {
                     navigation.navigate('Login');
                 }}

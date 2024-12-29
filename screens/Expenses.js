@@ -33,12 +33,13 @@ const Expenses = () => {
   }, []);
 
   const fetchExpenses = () => {
+    console.log(`??????>>>>`)
     setLoading(true);
     axios
       .get('https://sangramindustry-i5ws.onrender.com:3000/employee/getExpense')
       .then((response) => {
         setExpenses(response.data);
-        console.log(response.data[0])
+        console.log(response)
         setLoading(false);
       })
       .catch((error) => {

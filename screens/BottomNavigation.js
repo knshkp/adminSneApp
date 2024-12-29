@@ -5,12 +5,15 @@ import EmployeeHome from './EmployeeHome';// Ensure this import exists if Settin
 import ComplaintBox from './ComplaintBox';
 import Expenses from './Expenses';
 import EnquiryManagement from './EnquiryBox';
+import { Text } from 'react-native-paper';
 import Profile from './Profile';
+import EmployeeTable from './EmployeeReport';
 const Tab = createBottomTabNavigator();
 
 function BottomNavigate() {
   return (
-    <Tab.Navigator>
+    <>
+    <Tab.Navigator screenOptions={{ swipeEnabled: false }}>
       <Tab.Screen name="Home" component={EmployeeHome}         
       options={{
           tabBarIcon: ({ color, size, focused }) => (
@@ -75,7 +78,7 @@ function BottomNavigate() {
         }}  />
 
         
-                      <Tab.Screen name="Enquiry" component={EnquiryManagement} options={{
+        <Tab.Screen name="Enquiry" component={EnquiryManagement} options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={{
               alignItems: 'center',
@@ -95,6 +98,22 @@ function BottomNavigate() {
           ),
           headerShown: false
         }}  />
+        <Tab.Screen name="Reports" component={EmployeeTable} options={{
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              top:  0,
+              width:  25,
+              height:  25,
+              padding: focused ? 1 : 0,
+              borderRadius: 5,
+              backgroundColor: focused ? '#001B48' : '#FFFFFF', // Change background color based on focus
+            }}>
+            <Text>📊</Text>
+            </View>
+          ),
+        }} />
 
       <Tab.Screen name="Profile" component={Profile} options={{
           tabBarIcon: ({ color, size, focused }) => (
@@ -116,7 +135,9 @@ function BottomNavigate() {
           ),
           headerShown: false
         }} />
+
     </Tab.Navigator>
+    </>
   );
 }
 
