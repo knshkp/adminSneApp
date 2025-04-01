@@ -13,9 +13,10 @@ const TaskManagement = () => {
 
     const fetchTasks = async () => {
         try {
-            const employeeDetails = await AsyncStorage.getItem('employeeDetails');
+            const employeeDetails = await AsyncStorage.getItem('userDetails');
+            console.log(`>>>>>>>>>>>>>emp>>>>>${employeeDetails}`)
             const employeeDetail = JSON.parse(employeeDetails);
-            const response = await axios.get(`https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployeeComplaint?phone=${employeeDetail[0].phone}`);
+            const response = await axios.get(`https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployeeComplaint?phone=${employeeDetail.phone}`);
             setTasks(response.data.result);
         } catch (error) {
             console.error('Error fetching tasks:', error);
@@ -25,7 +26,8 @@ const TaskManagement = () => {
 
     const handleAddTask = async () => {
         try {
-            const employeeDetails = await AsyncStorage.getItem('employeeDetails');
+            const employeeDetails = await AsyncStorage.getItem('userDetails');
+            console.log(`>>>>>>EMPLO>>>>${employeeDetail}`)
             const employeeDetail = JSON.parse(employeeDetails);
             const body = {
                 customer_name: newTask.name,
@@ -40,6 +42,7 @@ const TaskManagement = () => {
                 group:newTask.group,
                 subGroup:newTask.subGroup
             };
+            
 
             await axios.post('https://sangramindustry-i5ws.onrender.com/employeeServices/addEmplohyeeComplaint', body, {
                 headers: {

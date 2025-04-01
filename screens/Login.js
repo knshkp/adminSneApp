@@ -2,30 +2,44 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { CommonActions } from '@react-navigation/native';
 const Login = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false); // Manage loading state
 
   const handleLogin = async () => {
-    console.log(`>>>>>>phomne`)
+    console.log(`>>>>>>phone`);
+  
     if (phoneNumber.length < 10) {
       setError("Phone Number is incomplete");
       return;
     }
-
-    setLoading(true); // Start loading
-    setError(null); // Clear previous errors
-
+  
+    setLoading(true);
+    setError(null);
+  
     try {
       const response = await axios.post('https://sangramindustry-i5ws.onrender.com/employee/loginEmployee', {
         phone: phoneNumber
       });
-
+  
       if (response.data.result) {
-        await AsyncStorage.setItem('employeeDetails', JSON.stringify(response.data.result));
-        navigation.navigate('BottomNavigation');
+        console.log(`>>>>>>response${JSON.stringify(response.data.result[0])}`)
+        const employeeData = {
+          ...response.data.result[0],
+          role: "employee", // Assign employee role
+        };
+        console.log(`>>>>empdata>>>>${JSON.stringify(employeeData)}`)
+  
+        await AsyncStorage.setItem('userDetails', JSON.stringify(employeeData));
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'BottomNavigation' }],
+          })
+        );
+
       } else {
         setError(response.data.message || 'Login failed');
       }
@@ -33,9 +47,10 @@ const Login = ({ navigation }) => {
       console.error(error);
       setError('An error occurred. Please try again.');
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
+  
 
   return (
     <KeyboardAvoidingView

@@ -1,49 +1,48 @@
 import React from 'react';
-import { ScrollView, View, Image, StyleSheet } from 'react-native';
-import { Avatar, Title, Caption, Text, Button, IconButton, Colors } from 'react-native-paper';
-import ghuman from '../public/ghuman.png'
-import AdminLogin from './AdminLogin';
-const Profile = ({navigation}) => {
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { Avatar, Title, Caption, Text, Button, IconButton } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ghuman from '../public/ghuman.png';
+
+const Profile = ({ navigation }) => {
+  
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('userDetails'); // Clear stored user details
+      navigation.reset({ index: 0, routes: [{ name: 'MainLog' }] }); // Reset navigation stack
+    } catch (error) {
+      console.error('Error clearing storage:', error);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Avatar.Image 
-          source={ghuman} 
-          size={100} 
-          style={styles.avatar}
-        />
+        <Avatar.Image source={ghuman} size={100} style={styles.avatar} />
         <Title style={styles.name}>Kanishk Pareek</Title>
         <Caption style={styles.bio}>Software Developer</Caption>
       </View>
+
       <View style={styles.infoSection}>
         <View style={styles.infoRow}>
-          <IconButton icon="email"  />
+          <IconButton icon="email" />
           <Text style={styles.infoText}>knshk@example.com</Text>
         </View>
         <View style={styles.infoRow}>
-          <IconButton icon="phone"  />
+          <IconButton icon="phone" />
           <Text style={styles.infoText}>+1 234 567 890</Text>
         </View>
         <View style={styles.infoRow}>
           <IconButton icon="map-marker" />
-          <Text style={styles.infoText}>Jaipur,Rajasthan</Text>
+          <Text style={styles.infoText}>Jaipur, Rajasthan</Text>
         </View>
       </View>
+
       <View style={styles.buttonSection}>
-        <Button 
-          mode="contained" 
-          onPress={() => {}}
-          color="#192841"
-          style={styles.button}
-        >
+        <Button mode="contained" color="#192841" style={styles.button} onPress={() => {}}>
           Edit Profile
         </Button>
-        <Button 
-          mode="contained" 
-          onPress={() => {{navigation.navigate('MainLog');}}}
-          color="#00072D"
-          style={styles.button}
-        >
+        <Button mode="contained" color="#00072D" style={styles.button} onPress={handleLogout}>
           Log Out
         </Button>
       </View>

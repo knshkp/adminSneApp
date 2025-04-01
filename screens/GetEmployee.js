@@ -7,6 +7,26 @@ import { DownloadTableExcel } from 'react-export-table-to-excel';
 import { useRef } from 'react';
 import RNFS from 'react-native-fs';
 import XLSX from 'xlsx';
+import axios from 'axios';
+import { Picker } from '@react-native-picker/picker';
+const FloatingLabelInput = ({ label, value, onChangeText, ...props }) => {
+    const [isFocused, setIsFocused] = useState(false);
+
+    return (
+        <View style={styles.inputContainer}>
+            {(isFocused || value) && <Text style={styles.floatingLabel}>{label}</Text>}
+            <TextInput
+                style={[styles.input, isFocused && styles.inputFocused]}
+                placeholder={!isFocused ? label : ''}
+                value={value}
+                onChangeText={onChangeText}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                {...props}
+            />
+        </View>
+    );
+};
 
 const GetEmployee = () => {
     const [vendors, setVendors] = useState([]);
@@ -16,18 +36,42 @@ const GetEmployee = () => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [submitAmountModal,setSubmitAmountModal]=useState(false);
     const [amount,setAmount]=useState(0)
+    const [pin,setPin]=useState(0);
+    const [isEditModalVisible, setEditModalVisible] = useState(false);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [newEmployee, setNewEmployee] = useState({
         vendor_name: '',
         phone_number: '',
         vendor_type: '',
         father_name: '',
-        seller_phone: '',
+        seller_phone: '8104450592',
         address: '',
         city: '',
         pincode: '',
         state: '',
         upi: ''
     });
+    const fetchState = async (pinCode) => {
+        if (!pinCode) return; // Prevent unnecessary API calls
+        try {
+            const api = `https://api.postalpincode.in/pincode/${pinCode}`;
+            const response = await axios.get(api);
+            const data = response.data;
+            if (data[0]?.PostOffice?.length > 0) {
+                const state = data[0].PostOffice[0].State;
+                const city=data[0].PostOffice[0].Block;
+                setNewEmployee((prev) => ({...prev, city}));
+                setNewEmployee((prev) => ({ ...prev, state }));
+            } else {
+                alert('Invalid Pincode');
+            }
+        } catch (error) {
+            console.error('Error fetching state:', error);
+        }
+    };
+    
+    
+    
     const exportToExcel = () => {
         const data = vendors.map((vendor, index) => ({
             id: index + 1,
@@ -55,8 +99,10 @@ const GetEmployee = () => {
         const fetchVendorData = async () => {
             try {
                 const response = await fetch('https://sangramindustry-i5ws.onrender.com/employee/getEmployee?phone=8104450592');
+            
                 if (response.ok) {
                     const data = await response.json();
+                    console.log(data)
                     setVendors(data.result);
                     setFilteredVendors(data.result);
                 } else {
@@ -90,9 +136,43 @@ const GetEmployee = () => {
         );
         setFilteredVendors(filteredData);
     };
+    const handleEditEmployee = async () => {
+        try {
+            console.log(`>>>>>>>${JSON.stringify(selectedEmployee)}`)
+            const response = await fetch(`https://sangramindustry-i5ws.onrender.com/employee/editEmployee`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(selectedEmployee),
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                const updatedVendors = vendors.map(vendor =>
+                    vendor._id === selectedEmployee._id ? data.result : vendor
+                );
+                setVendors(updatedVendors);
+                setFilteredVendors(updatedVendors);
+                setEditModalVisible(false);
+            } else {
+                console.error('Error editing employee:', response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+    
+    const openEditModal = (employee) => {
+        console.log(selectedEmployee)
+        setSelectedEmployee(employee);
+        setEditModalVisible(true);
+    };
+    
 
     const handleAddEmployee = async () => {
         try {
+            console.log(newEmployee)
             const response = await fetch('https://sangramindustry-i5ws.onrender.com/employee/addEmployee', {
                 method: 'POST',
                 headers: {
@@ -134,25 +214,26 @@ const GetEmployee = () => {
                 <Text style={styles.cellText}>{item.phone_number}</Text>
             </View>
             <View style={[styles.cell, { width: 120 }]}>
-                <Text style={styles.cellText}>{item.phone_number}</Text>
+                <Text style={styles.cellText}>{item.vendor_type}</Text>
             </View>
             <View style={[styles.cell, { width: 120 }]}>
-                <Text style={styles.cellText}>{item.phone_number}</Text>
+                <Text style={styles.cellText}>{item.father_name}</Text>
             </View>
             <View style={[styles.cell, { width: 120 }]}>
-                <Text style={styles.cellText}>{item.phone_number}</Text>
+                <Text style={styles.cellText}>{item.address}</Text>
+            </View>
+            
+            <View style={[styles.cell, { width: 120 }]}>
+                <Text style={styles.cellText}>{item.city}</Text>
             </View>
             <View style={[styles.cell, { width: 120 }]}>
-                <Text style={styles.cellText}>{item.phone_number}</Text>
+                <Text style={styles.cellText}>{item.state}</Text>
             </View>
             <View style={[styles.cell, { width: 120 }]}>
-                <Text style={styles.cellText}>{item.phone_number}</Text>
+                <Text style={styles.cellText}>{item.pincode}</Text>
             </View>
             <View style={[styles.cell, { width: 120 }]}>
-                <Text style={styles.cellText}>{item.phone_number}</Text>
-            </View>
-            <View style={[styles.cell, { width: 120 }]}>
-                <Text style={styles.cellText}>{item.phone_number}</Text>
+                <Text style={styles.cellText}>{item.upi}</Text>
             </View>
             <View style={[styles.cell, { width: 120 }]}>
                 <Button
@@ -169,6 +250,13 @@ const GetEmployee = () => {
                     style={tw`rounded-full`}
                 />
             </View>
+        <View style={[styles.cell, { width: 120 }]}>
+            <Button
+                title="Edit"
+                onPress={() => openEditModal(item)}
+                color="#092147"
+            />
+        </View>
         </View>
     );
 
@@ -205,17 +293,14 @@ const GetEmployee = () => {
 
                     <View style={styles.header}>
                         <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Name</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Number</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Sales</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Service</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Enquiry</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Complaint</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Total Marketing</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Today Total Amount</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Pending Amount</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Submitted Amount</Text>
-                        <Text style={[styles.cell, styles.headerCell, { width: 100 }]}>Details</Text>
-
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Phone Number</Text>
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Vendor Type</Text>
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Father Name</Text>
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>Address</Text>
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>City</Text>
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>PinCode</Text>
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>State</Text>
+                        <Text style={[styles.cell, styles.headerCell, { width: 120 }]}>UPI</Text>
                     </View>
                     <ScrollView>
                         <FlatList
@@ -238,22 +323,27 @@ const GetEmployee = () => {
                         <Text style={styles.modalTitle}>Add New Employee</Text>
                         <TextInput
                             style={styles.modalInput}
-                            placeholder="Vendor Name"
+                            placeholder="Customer Name"
                             value={newEmployee.vendor_name}
                             onChangeText={text => setNewEmployee({ ...newEmployee, vendor_name: text })}
                         />
-                        <TextInput
+                        <FloatingLabelInput
                             style={styles.modalInput}
                             placeholder="Phone Number"
+                            keyboardType='phone-pad'
+                            maxLength={10}
                             value={newEmployee.phone_number}
                             onChangeText={text => setNewEmployee({ ...newEmployee, phone_number: text })}
                         />
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="Vendor Type"
-                            value={newEmployee.vendor_type}
-                            onChangeText={text => setNewEmployee({ ...newEmployee, vendor_type: text })}
-                        />
+                        <Picker
+                                selectedValue={newEmployee.vendor_type}
+                                onValueChange={(itemValue) => setNewEmployee({ ...newEmployee, vendor_type: itemValue })}
+                            >
+                                <Picker.Item label="Select Entry Type" value="" />
+                                <Picker.Item label="Sales" value="Sales" />
+                                <Picker.Item label="Service" value="Service" />
+                                <Picker.Item label="Marketing" value="Marketing" />
+                       </Picker>
                         <TextInput
                             style={styles.modalInput}
                             placeholder="Father Name"
@@ -262,9 +352,12 @@ const GetEmployee = () => {
                         />
                         <TextInput
                             style={styles.modalInput}
-                            placeholder="Seller Phone"
+                            placeholder="Employee Phone"
                             value={newEmployee.seller_phone}
+                            keyboardType='phone-pad'
+                            maxLength={10}
                             onChangeText={text => setNewEmployee({ ...newEmployee, seller_phone: text })}
+                            editable={false}
                         />
                         <TextInput
                             style={styles.modalInput}
@@ -274,21 +367,31 @@ const GetEmployee = () => {
                         />
                         <TextInput
                             style={styles.modalInput}
-                            placeholder="City"
+                            placeholder="Customer Pincode"
+                            value={newEmployee.pincode}
+                            keyboardType="number-pad"
+                            onChangeText={(text) => {
+                                setNewEmployee((prev) => ({ ...prev, pincode: text }));
+                                if (text.length === 6) {
+                                    fetchState(text); // Trigger fetch when the pincode is valid length
+                                }
+                            }}
+                        />
+                        <TextInput
+                            style={styles.modalInput}
+                            placeholder="Customer City"
                             value={newEmployee.city}
                             onChangeText={text => setNewEmployee({ ...newEmployee, city: text })}
+                            editable={false}
                         />
+
+
                         <TextInput
                             style={styles.modalInput}
-                            placeholder="Pincode"
-                            value={newEmployee.pincode}
-                            onChangeText={text => setNewEmployee({ ...newEmployee, pincode: text })}
-                        />
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="State"
+                            placeholder="Customer State"
                             value={newEmployee.state}
                             onChangeText={text => setNewEmployee({ ...newEmployee, state: text })}
+                            editable={false}
                         />
                         <TextInput
                             style={styles.modalInput}
@@ -303,6 +406,54 @@ const GetEmployee = () => {
                     </View>
                 </View>
             </Modal>
+            <Modal
+    visible={isEditModalVisible}
+    animationType="slide"
+    transparent={true}
+    onRequestClose={() => setEditModalVisible(false)}
+>
+    <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Employee</Text>
+            <TextInput
+                style={styles.modalInput}
+                placeholder="Employee Name"
+                value={selectedEmployee?.vendor_name || ''}
+                onChangeText={text => setSelectedEmployee({ ...selectedEmployee, vendor_name: text })}
+            />
+            <TextInput
+                style={styles.modalInput}
+                placeholder="Phone Number"
+                value={selectedEmployee?.phone_number||''}
+                keyboardType="phone-pad"
+                onChangeText={text => setSelectedEmployee({ ...selectedEmployee, phone_number: text })}
+            />
+            <TextInput
+                style={styles.modalInput}
+                placeholder="Address"
+                value={selectedEmployee?.address || ''}
+                onChangeText={text => setSelectedEmployee({ ...selectedEmployee, address: text })}
+            />
+            <TextInput
+                style={styles.modalInput}
+                placeholder="Pincode"
+                value={selectedEmployee?.pincode || ''}
+                keyboardType="number-pad"
+                onChangeText={text => setSelectedEmployee({ ...selectedEmployee, pincode: text })}
+            />
+            <TextInput
+                style={styles.modalInput}
+                placeholder="UPI"
+                value={selectedEmployee?.upi || ''}
+                onChangeText={text => setSelectedEmployee({ ...selectedEmployee, upi: text })}
+            />
+            <View style={styles.modalButtonContainer}>
+                <Button title="Save" onPress={handleEditEmployee} color="#001b78" />
+                <Button title="Cancel" onPress={() => setEditModalVisible(false)} color="#001b78" />
+            </View>
+        </View>
+    </View>
+</Modal>
             <Modal
                 visible={submitAmountModal}
                 animationType="slide"
@@ -390,14 +541,27 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
+    floatingLabel: {
+        position: 'absolute',
+        top: -10,
+        left: 10,
+        fontSize: 12,
+        color: '#666',
+        backgroundColor: '#fff',
+        paddingHorizontal: 4,
+        zIndex: 1,
+    },
     input: {
-        flex: 1,
-        height: 40,
-        borderColor: '#ddd',
+        height: 50,
         borderWidth: 1,
-        borderRadius: 5,
+        borderColor: '#ccc',
+        borderRadius: 8,
         paddingHorizontal: 10,
-        marginRight: 10,
+        fontSize: 16,
+        color: '#333',
+    },
+    inputFocused: {
+        borderColor: '#092147',
     },
     modalContainer: {
         flex: 1,

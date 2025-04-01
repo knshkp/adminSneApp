@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Modal, Pressable, Platform } from 'react-native';
 import tw from 'twrnc';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const AdminLogin = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword,setShowPassword] = useState(false);
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (phoneNumber === '8104450592' && password === 'Sangram@1234') {
+      const adminData = {
+        phone: phoneNumber,
+        role: "admin", // Assign admin role
+      };
+      await AsyncStorage.setItem('userDetails', JSON.stringify(adminData));
       navigation.reset({
         index: 0,
         routes: [{ name: 'OTP' }], // Navigating to OTP screen

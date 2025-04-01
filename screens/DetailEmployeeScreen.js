@@ -1,8 +1,39 @@
 // DetailScreen.js
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Button } from 'react-native-paper';
 
 const DetailScreen = ({ route }) => {
+    const handleDelete = async () => {
+        try {
+            console.log(`>>>>>>>>${JSON.stringify(employee._id)}`)
+            const api=`https://sangramindustry-i5ws.onrender.com/employee/removeEmployee?id=${employee._id}`
+            console.log(`>>>>>>>>${api}`)
+            // Send a GET request to remove the employee
+            const response = await fetch(
+                api,
+                {
+                    method: 'GET',
+                }
+            );
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete employee');
+            }
+    
+            Alert.alert('Success', 'Employee deleted successfully', [
+                {
+                    text: 'OK',
+                    onPress: () => navigation.goBack(),
+                },
+            ]);
+        } catch (error) {
+            console.error('Error deleting employee:', error);
+            Alert.alert('Error', error.message || 'Something went wrong');
+        }
+    };
+    
     const employee = route.params;
 
     return (
@@ -27,6 +58,9 @@ const DetailScreen = ({ route }) => {
             <Text style={styles.value}>{employee.state}</Text>
             <Text style={styles.label}>UPI:</Text>
             <Text style={styles.value}>{employee.upi}</Text>
+            <Button mode="contained" style={styles.deleteButton} onPress={handleDelete}>
+                Delete Employee
+            </Button>
         </ScrollView>
     );
 };

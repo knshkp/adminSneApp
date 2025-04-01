@@ -33,7 +33,6 @@ const Expenses = () => {
   }, []);
 
   const fetchExpenses = () => {
-    console.log(`??????>>>>`)
     setLoading(true);
     axios
       .get('https://sangramindustry-i5ws.onrender.com:3000/employee/getExpense')

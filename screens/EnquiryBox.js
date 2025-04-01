@@ -13,9 +13,9 @@ const EnquiryManagement = () => {
 
     const fetchTasks = async () => {
         try {
-            const employeeDetails = await AsyncStorage.getItem('employeeDetails');
+            const employeeDetails = await AsyncStorage.getItem('userDetails');
             const employeeDetail = JSON.parse(employeeDetails);
-            const response = await axios.get(`https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployeeComplaint?phone=${employeeDetail[0].phone}`);
+            const response = await axios.get(`https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployeeComplaint?phone=${employeeDetail.phone}`);
             setTasks(response.data.result);
         } catch (error) {
             console.error('Error fetching tasks:', error);
@@ -25,14 +25,14 @@ const EnquiryManagement = () => {
 
     const handleAddTask = async () => {
         try {
-            const employeeDetails = await AsyncStorage.getItem('employeeDetails');
+            const employeeDetails = await AsyncStorage.getItem('userDetails');
             const employeeDetail = JSON.parse(employeeDetails);
             const body = {
                 customer_name: newTask.name,
                 customer_phone: newTask.phone,
                 customer_address: newTask.address,
-                pending_staff_name: employeeDetail[0].vendor_name,
-                pending_staff_phone: employeeDetail[0].phone_number,
+                pending_staff_name: employeeDetail.vendor_name,
+                pending_staff_phone: employeeDetail.phone_number,
                 pending_staff_date: moment().format('Do MMMM YYYY'),
                 pending_staff_time: moment().format('h:mm a'),
                 description: newTask.description,

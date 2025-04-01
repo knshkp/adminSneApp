@@ -16,7 +16,8 @@ const EmployeeTable = () => {
       const response = await fetch("https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployee?phone=9694668873");
       const data = await response.json();
       setEmployees(data.result);
-      setFilteredEmployees(data.result); // Set filtered list initially to all employees
+      console.log(data.result)
+      setFilteredEmployees(data.result);
     };
 
     fetchEmployeeData();
@@ -43,7 +44,7 @@ const EmployeeTable = () => {
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(data);
       XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-  
+      
       const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
       const uniqueFileName = `Services_${moment().format('YYYYMMDD_HHmmss')}.xlsx`;
       const filePath = `${RNFS.DocumentDirectoryPath}/${uniqueFileName}`;
@@ -82,13 +83,14 @@ const EmployeeTable = () => {
     <View style={styles.row}>
       <Text style={styles.cell}>{item.seller_phone}</Text>
       <Text style={styles.cell}>{item.customer_name}</Text>
-      <Text style={styles.cell}>{item.shop_name}</Text>
-      <Text style={styles.cell}>{item.service_type}</Text>
+      {serviceType=="Marketing"?<Text style={styles.cell}>{item.shop_name}</Text>:""}
+      {serviceType=="All"?<Text style={styles.cell}>{item.service_type}</Text>:""}
       <Text style={styles.cell}>{item.product_name}</Text>
       <Text style={styles.cell}>{item.product_price}</Text>
-      <Text style={styles.cell}>{item.discount}</Text>
-      <Text style={styles.cell}>{item.final_price}</Text>
+      {serviceType!="Marketing"?<Text style={styles.cell}>{item.discount}</Text>:""}
+      {serviceType!="Marketing"?<Text style={styles.cell}>{item.final_price}</Text>:""}
       <Text style={styles.cell}>{item.payment_method}</Text>
+      <Text style={styles.cell}>{item.createdAt}</Text>
     </View>
   );
 
@@ -127,13 +129,14 @@ const EmployeeTable = () => {
           <View style={styles.header}>
             <Text style={styles.headerText}>Seller Phone</Text>
             <Text style={styles.headerText}>Customer Name</Text>
-            <Text style={styles.headerText}>Shop Name</Text>
-            <Text style={styles.headerText}>Service Type</Text>
+            {serviceType=="Marketing"?<Text style={styles.headerText}>Shop Name</Text>:""}
+            {serviceType=="All"?<Text style={styles.headerText}>Service Type</Text>:""}
             <Text style={styles.headerText}>Product Name</Text>
             <Text style={styles.headerText}>Price</Text>
-            <Text style={styles.headerText}>Discount</Text>
-            <Text style={styles.headerText}>Final Price</Text>
+            {serviceType!="Marketing"?<Text style={styles.headerText}>Discount</Text>:""}
+            {serviceType!="Marketing"?<Text style={styles.headerText}>Final Price</Text>:""}
             <Text style={styles.headerText}>Payment Method</Text>
+            <Text style={styles.headerText}>Date and Time</Text>
           
           </View>
 

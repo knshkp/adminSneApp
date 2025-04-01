@@ -10,6 +10,7 @@ import tw from 'twrnc';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Image } from 'react-native';
 import { KeyboardAvoidingView, Platform } from 'react-native';
+import { Printer, PrintTypes } from 'react-native-thermal-receipt-printer';
 const EmployeeHome = () => {
     const [vendors, setVendors] = useState([]);
     const [items, setItems] = useState([
@@ -41,11 +42,13 @@ const EmployeeHome = () => {
     const [shop,setShop]=useState('')
     const [details,setDetails]=useState([]);
     const addApi = async () => {
-        const employeeDetails=await AsyncStorage.getItem('employeeDetails')
+        console.log('>>>>>>')
+        const employeeDetails=await AsyncStorage.getItem('userDetails')
+        // console.log(employeeDetails)
         const finalEmployee=JSON.parse(employeeDetails)
-        console.log(finalEmployee[0].phone_number)
+        console.log(finalEmployee)
         const body = {
-          seller_phone: finalEmployee[0].phone_number,
+          seller_phone: finalEmployee?.phone_number,
           customer_name: customerName,
           customer_phone: mobileNumber,
           customer_address: address,
@@ -57,7 +60,7 @@ const EmployeeHome = () => {
           payment_method: paymentSelect,
           service_type: activeTab
         };
-        console.log(body)
+        console.log(`>>>>>>>body>>>>.${body}`);
       
         try {
           const response = await axios.post('https://sangramindustry-i5ws.onrender.com/employeeServices/addEmployeeService', body, {
@@ -73,6 +76,69 @@ const EmployeeHome = () => {
           console.error('There was a problem with the axios operation:', error);
         }
       };
+      const printBill = async () => {
+        try {
+            // Ensure that the printer is connected (you may need to pair it with the device)
+            const isConnected = await Printer.isPrinterConnected();
+            if (!isConnected) {
+                alert('Printer not connected');
+                return;
+            }
+    
+            const billContent = generateBill();
+    
+            // Print the bill to the thermal printer
+            await Printer.printText(billContent);
+            
+            // Optional: Feed a line or cut the paper if the printer supports it
+            await Printer.printText("\n\n\n"); // You can add more line breaks for formatting
+            await Printer.cut(); // If your printer supports cutting the paper
+    
+            alert('Bill printed successfully!');
+        } catch (error) {
+            console.error('Printing failed', error);
+            alert('Printing failed, please try again');
+        }
+    };
+      const generateBill = () => {
+        return `
+        -----------------------------
+        Bill Details
+        -----------------------------
+        Customer Name: ${customerName}
+        Mobile Number: ${mobileNumber}
+        Address: ${address}
+        Category: ${category}
+        Product: ${product}
+        Price: ${price}
+        Discount: ${discount}%
+        Final Price: ${price - (discount * price) / 100}
+        Payment Method: ${paymentSelect}
+        -----------------------------
+        Thank you for your purchase!
+        -----------------------------
+        `;
+    };
+    
+      const fetchState = async (pinCode) => {
+        if (!pinCode) return; // Prevent unnecessary API calls
+        try {
+            const api = `https://api.postalpincode.in/pincode/${pinCode}`;
+            const response = await axios.get(api);
+            const data = response.data;
+            if (data[0]?.PostOffice?.length > 0) {
+                const state = data[0].PostOffice[0].State;
+                const city=data[0].PostOffice[0].Block;
+                setState(state)
+                setCity(city);
+            } else {
+                alert('Invalid Pincode');
+            }
+        } catch (error) {
+            console.error('Error fetching state:', error);
+        }
+    };
+
       const addMarketingEntry = async () => {
         const employeeDetails=await AsyncStorage.getItem('employeeDetails')
         const finalEmployee=JSON.parse(employeeDetails)
@@ -259,15 +325,25 @@ const EmployeeHome = () => {
                     {product && (
                         <Text style={styles.priceText}>Final Price: {price - (discount * price) / 100}</Text>
                     )}
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Payment Method"
+                    {product&&<DropDownPicker
+                        open={open}
                         value={paymentSelect}
-                        onChangeText={setPaymentSelect}
-                    />
+                        items={items}
+                        setOpen={setOpen}
+                        setValue={setPaymentSelect}
+                        setItems={setItems}
+                        placeholder="Select Payment Method"
+                        style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
+                    />}
+                    <View style={styles.dateTimeContainer}>
                     <TouchableOpacity style={styles.button} onPress={addApi}>
                         <Text style={styles.buttonText}>Submit</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity style={styles.button} onPress={()=>{addApi(); printBill();}}>
+                        <Text style={styles.buttonText}>Submit & Print</Text>
+                    </TouchableOpacity>
+                    </View>
                 
                 </>
             );
@@ -423,6 +499,18 @@ const EmployeeHome = () => {
                         value={address}
                         onChangeText={setAddress}
                     />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Pincode"
+                        value={pin}
+                        maxLength={6}
+                        keyboardType='phone-pad'
+                        onChangeText={(text)=>{
+                            setPin(text);
+                            if(text.length === 6){
+                                fetchState(text);
+                            }
+                    }}/>
                     <View style={styles.dateTimeContainer}>
                     <TextInput
                         style={styles.inputs}
@@ -437,14 +525,7 @@ const EmployeeHome = () => {
                         onChangeText={setState}
                     />
                     </View>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Pincode"
-                        value={pin}
-                        maxLength={6}
-                        keyboardType='phone-pad'
-                        onChangeText={setPin}
-                    />
+
                     {/* <TextInput
                         style={styles.input}
                         placeholder="Description"
@@ -631,10 +712,11 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: '#192841',
-        paddingVertical: 10,
+        paddingVertical: 15,
         borderRadius: 30,
         alignItems: 'center',
-        marginHorizontal:10
+        marginHorizontal:20,
+        paddingHorizontal:15
     },
     buttonText: {
         color: '#fff',
@@ -649,6 +731,11 @@ const styles = StyleSheet.create({
     dateTimeContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+    },
+    dateTimeContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width:350
     },
     namePhoneContainer: {
         flexDirection: 'row',
