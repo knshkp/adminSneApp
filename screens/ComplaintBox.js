@@ -4,6 +4,7 @@ import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TaskManagement = () => {
     const [tasks, setTasks] = useState([]);
@@ -33,8 +34,8 @@ const TaskManagement = () => {
                 customer_name: newTask.name,
                 customer_phone: newTask.phone,
                 customer_address: newTask.address,
-                pending_staff_name: employeeDetail[0].vendor_name,
-                pending_staff_phone: employeeDetail[0].phone_number,
+                pending_staff_name: "Kanishk pareek",
+                pending_staff_phone: 9694668873,
                 pending_staff_date: moment().format('Do MMMM YYYY'),
                 pending_staff_time: moment().format('h:mm a'),
                 description: newTask.description,
@@ -166,7 +167,7 @@ const TaskManagement = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.tabContainer}>
                 {['Pending', 'Running', 'Completed'].map(status => (
                     <TouchableOpacity
@@ -243,7 +244,7 @@ const TaskManagement = () => {
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 };
 
