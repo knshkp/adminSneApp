@@ -4,10 +4,11 @@ import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const EnquiryManagement = () => {
     const [tasks, setTasks] = useState([]);
-    const [activeTab, setActiveTab] = useState('PendingEnquiry');
+    const [activeTab, setActiveTab] = useState('Pending');
     const [newTask, setNewTask] = useState({ name: '', phone: '', address: '', description: '', status: 'Pending',group:'',subGroup:'' });
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -134,7 +135,7 @@ const EnquiryManagement = () => {
                     <Text style={styles.taskDetail}>Group: {task.group}</Text>
                     <Text style={styles.taskDetail}>subGroup: {task.subGroup}</Text>
 
-                    {status === 'PendingEnquiry' && (
+                    {status === 'Pending' && (
                         <>
                         <Text style={styles.taskDetail}>Accepted By: {task.accept_staff_name}</Text>
                         <TouchableOpacity onPress={() => handleApprovedTask(task._id,'RunningEnquiry')} style={styles.statusButton}>
@@ -142,7 +143,7 @@ const EnquiryManagement = () => {
                         </TouchableOpacity>
                         </>
                     )}
-                    {status === 'RunningEnquiry' && (
+                    {status === 'Running' && (
                         <>
                         <Text style={styles.taskDetail}>Accepted By: {task.accept_staff_name} {task.accept_staff_phone}</Text>
                         <Text style={styles.taskDetail}>Accepted At: {task.accept_staff_date} {task.accept_staff_time}</Text>
@@ -152,7 +153,7 @@ const EnquiryManagement = () => {
                         </TouchableOpacity>
                         </>
                     )}
-                    {status === 'CompletedEnquiry' && (
+                    {status === 'Completed' && (
                         <>
                         <Text style={styles.taskDetail}>Accepted By: {task.accept_staff_name} {task.accept_staff_phone}</Text>
                         <Text style={styles.taskDetail}>Accepted At: {task.accept_staff_date} {task.accept_staff_time}</Text>
@@ -164,9 +165,9 @@ const EnquiryManagement = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.tabContainer}>
-                {['PendingEnquiry', 'RunningEnquiry', 'CompletedEnquiry'].map(status => (
+                {['Pending', 'Running', 'Completed'].map(status => (
                     <TouchableOpacity
                         key={status}
                         style={[styles.tab, activeTab === status && styles.activeTab]}
@@ -241,7 +242,7 @@ const EnquiryManagement = () => {
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 };
 

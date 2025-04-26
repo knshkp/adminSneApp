@@ -1,23 +1,44 @@
-import React from 'react';
+import React,{ useRef, useEffect } from 'react';
 import { Image, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import EmployeeHome from './EmployeeHome';// Ensure this import exists if SettingsScreen is defined elsewhere
 import ComplaintBox from './ComplaintBox';
 import Expenses from './Expenses';
+import { Animated } from 'react-native';
 import EnquiryManagement from './EnquiryBox';
 import { Text } from 'react-native-paper';
 import Profile from './Profile';
 import EmployeeTable from './EmployeeReport';
-import { KeyboardAvoidingView } from 'react-native';
-const Tab = createBottomTabNavigator();
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
+import { KeyboardAvoidingView } from 'react-native';
+const Tab = createBottomTabNavigator()
 function BottomNavigate() {
   return (
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.container}
         >
-    <Tab.Navigator screenOptions={{ swipeEnabled: false }}>
+    <Tab.Navigator    tabBarOptions={{
+      keyboardHidesTabBar: true
+   }}    screenOptions={{
+    tabBarShowLabel: false,
+    tabBarStyle: {
+      position: 'absolute',
+      bottom: 20,
+      left: 20,
+      right: 20,
+      elevation: 5,
+      backgroundColor: '#fff',
+      borderRadius: 15,
+      height: 70,
+      shadowColor: '#000',
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 10 },
+      shadowRadius: 10,
+    },
+    headerShown: false,
+  }}>
       <Tab.Screen name="Home" component={EmployeeHome}         
       options={{
           tabBarIcon: ({ color, size, focused }) => (

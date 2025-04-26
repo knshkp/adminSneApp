@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity,FlatList } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity,FlatList,SafeAreaView } from 'react-native';
 import moment from 'moment';
 import DropDownPicker from 'react-native-dropdown-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-import tw from 'twrnc';
+import tw from 'tailwind-react-native-classnames';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Image } from 'react-native';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { Printer, PrintTypes } from 'react-native-thermal-receipt-printer';
+import * as ImagePicker from 'react-native-image-picker'; // For selecting images
+import Geolocation from '@react-native-community/geolocation';
 const EmployeeHome = () => {
     const [vendors, setVendors] = useState([]);
     const [items, setItems] = useState([
@@ -41,6 +43,45 @@ const EmployeeHome = () => {
     const [machine,setMachine]=useState('');
     const [shop,setShop]=useState('')
     const [details,setDetails]=useState([]);
+    const [image, setImage] = useState(null);
+    const [location, setLocation] = useState(null);
+    const [isFocused, setIsFocused] = useState(false);
+    const [isMobileFocused,setIsMobileFocused]=useState(false);
+    const [isShopFocused,setIsShopFocused]=useState(false);
+    const [isAddressFocused,setIsAddressFocused]=useState(false);
+    const [isPincodeFocused,setIsPincodeFocused]=useState(false);
+    const [isCityFocused,setIsCityFocused]=useState(false);
+    const [isStateFocused,setIsStateFocused]=useState(true);
+
+    const [marketingCategory, setMarketingCategory] = useState([
+        { label: "Weighing Scale", value: "weighing_scale" },
+        { label: "Dairy Products", value: "dairy_products" },
+        { label: "Dairy Machines", value: "dairy_machines" }
+      ]);
+      
+    const fetchLocation = () => {
+        Geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setLocation({ latitude, longitude });
+            Alert.alert("Location fetched", `Lat: ${latitude}, Long: ${longitude}`);
+          },
+          (error) => Alert.alert("Error", "Unable to fetch location"),
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+        );
+      };
+    
+      // Image upload functionality
+      const pickImage = () => {
+        const options = {
+          noData: true,
+        };
+        ImagePicker.launchImageLibrary(options, (response) => {
+          if (response.assets && response.assets.length > 0) {
+            setImage(response.assets[0].uri); // Store image URI in the state
+          }
+        });
+      };
     const addApi = async () => {
         console.log('>>>>>>')
         const employeeDetails=await AsyncStorage.getItem('userDetails')
@@ -81,23 +122,19 @@ const EmployeeHome = () => {
             // Ensure that the printer is connected (you may need to pair it with the device)
             const isConnected = await Printer.isPrinterConnected();
             if (!isConnected) {
-                alert('Printer not connected');
+                Alert.alert('Printer not connected');
                 return;
             }
     
             const billContent = generateBill();
-    
-            // Print the bill to the thermal printer
             await Printer.printText(billContent);
-            
-            // Optional: Feed a line or cut the paper if the printer supports it
             await Printer.printText("\n\n\n"); // You can add more line breaks for formatting
             await Printer.cut(); // If your printer supports cutting the paper
     
-            alert('Bill printed successfully!');
+            Alert.alert('Bill printed successfully!');
         } catch (error) {
             console.error('Printing failed', error);
-            alert('Printing failed, please try again');
+            Alert.alert('Printing failed, please try again');
         }
     };
       const generateBill = () => {
@@ -132,7 +169,7 @@ const EmployeeHome = () => {
                 setState(state)
                 setCity(city);
             } else {
-                alert('Invalid Pincode');
+                Alert.alert('Invalid Pincode');
             }
         } catch (error) {
             console.error('Error fetching state:', error);
@@ -168,8 +205,6 @@ const EmployeeHome = () => {
             },
           });
           Alert.alert('Employee Details Added')
-      
-          console.log(`>>>>>>ewsponese${response.data}`);
         } catch (error) {
             Alert.alert('Detail Not Added')
           console.error('There was a problem with the axios operation:', error);
@@ -256,6 +291,21 @@ const EmployeeHome = () => {
         if (activeTab === 'Sales') {
             return (
                 <>
+                <View style={tw`flex-row m-2 ml-4`}>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'Sales' && styles.activeTab]}
+                    onPress={() => setActiveTab('Sales')}
+                  >
+                    <Text style={styles.tabText}>Sales</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'cashSales' && styles.activeTab]}
+                    onPress={() => setActiveTab('cashSales')}
+                  >
+                    <Text style={styles.tabText}>Cash Sales</Text>
+                  </TouchableOpacity>
+                </View>
                 {/* <Text>Hi </Text>
                     <View style={styles.dateTimeContainer}>
                         <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
@@ -272,6 +322,7 @@ const EmployeeHome = () => {
                         value={customerName}
                         onChangeText={setCustomerName}
                     />
+
                     <TextInput
                         style={styles.inputs}
                         placeholder="Mobile Number"
@@ -347,7 +398,26 @@ const EmployeeHome = () => {
                 
                 </>
             );
-        } else if (activeTab === 'Service') {
+        } 
+        else if(activeTab==="cashSales"){
+            <>
+            <Text>Cash Sales</Text>
+            <TextInput
+                        style={styles.inputs}
+                        placeholder="Customer Name"
+                        value={customerName}
+                        onChangeText={setCustomerName}
+                    />
+                    <TextInput
+                        style={styles.inputs}
+                        placeholder="Price"
+                        value={price}
+                        onChangeText={setPrice}
+                    />
+            </>
+
+
+        }else if (activeTab === 'Service') {
             return (
                 <>
                 
@@ -461,47 +531,83 @@ const EmployeeHome = () => {
                         <Text style={{marginRight:120}}> Phone</Text>
                     </View> */}
                     <View style={styles.dateTimeContainer}>
+                    <View >
+                        {/* Show the "Customer Name" label only if the input is focused or if the user has entered a name */}
+                        {(isFocused || customerName) && (
+                            <Text style={styles.customerNameText}>Customer Name</Text>
+                        )}
+
+                        {/* TextInput for entering customer name */}
+                        <TextInput
+                            style={styles.inputd}
+                            placeholder="Enter Customer Name"
+                            value={customerName}
+                            onChangeText={setCustomerName}
+                            onFocus={() => setIsFocused(true)} // Set focus state to true when input is focused
+                            onBlur={() => setIsFocused(false)} // Set focus state to false when input is blurred
+                        />
+                        </View>
+                        <View >
+                        {/* Show the "Customer Name" label only if the input is focused or if the user has entered a name */}
+                        {(isMobileFocused || mobileNumber) && (
+                            <Text style={styles.customerNameText}>Mobile Number</Text>
+                        )}
+
                     <TextInput
-                        style={styles.inputs}
-                        placeholder="Customer Name"
-                        value={customerName}
-                        onChangeText={setCustomerName}
-                    />
-                    <TextInput
-                        style={styles.inputs}
+                        style={styles.inputd}
                         placeholder="Mobile Number"
                         keyboardType="phone-pad"
                         maxLength={10}
+                        onBlur={() => setIsMobileFocused(false)}
+                        onFocus={() => setIsMobileFocused(true)}
                         value={mobileNumber}
                         onChangeText={setMobileNumber}
                     />
                     </View>
+                    </View>
+                    
                     <DropDownPicker
                         open={openCategory}
                         value={category}
-                        items={categoryItems}
+                        items={marketingCategory}
                         setOpen={setOpenCategory}
                         setValue={setCategory}
-                        setItems={setCategoryItems}
+                        setItems={setMarketingCategory}
                         placeholder="Select Category"
                         style={styles.dropdown}
                         dropDownContainerStyle={styles.dropdownContainer}
                     />
+                    <View >
+                        {(isShopFocused || shop) && (
+                            <Text style={styles.customerNameText}>Shop Name</Text>
+                        )}
                     <TextInput
                         style={styles.input}
                         placeholder="Shop Name"
                         value={shop}
                         onChangeText={setShop}
+                        onFocus={() => setIsShopFocused(true)}
                     />
+                    </View>
+                    <View >
+                        {(isAddressFocused || address) && (
+                            <Text style={styles.customerNameText}>Address</Text>
+                        )}
                     <TextInput
                         style={styles.input}
                         placeholder="Address"
                         value={address}
+                        onFocus={() => setIsAddressFocused(true)}
                         onChangeText={setAddress}
-                    />
+                    /></View>
+                                        <View >
+                        {( pin) && (
+                            <Text style={styles.customerNameText}>PinCode</Text>
+                        )}
                     <TextInput
                         style={styles.input}
                         placeholder="Pincode"
+                        onFocus={() => setIsPincodeFocused(true)}
                         value={pin}
                         maxLength={6}
                         keyboardType='phone-pad'
@@ -511,19 +617,32 @@ const EmployeeHome = () => {
                                 fetchState(text);
                             }
                     }}/>
+                    </View>
                     <View style={styles.dateTimeContainer}>
+                    <View >
+                        {( city) && (
+                            <Text style={styles.customerNameText}>City</Text>
+                        )}
                     <TextInput
-                        style={styles.inputs}
+                        style={styles.inputd}
                         placeholder="City"
+                        onFocus={() => setIsCityFocused(true)}
                         value={city}
                         onChangeText={setCity}
                     />
+                    </View>
+                    <View >
+                        {( state) && (
+                            <Text style={styles.customerNameText}>State:</Text>
+                        )}
                     <TextInput
-                        style={styles.inputs}
+                        style={styles.inputd}
                         placeholder="State"
                         value={state}
+                        onFocus={() => setIsStateFocused(true)}
                         onChangeText={setState}
                     />
+                    </View>
                     </View>
 
                     {/* <TextInput
@@ -539,7 +658,7 @@ const EmployeeHome = () => {
                         onChangeText={setCity}
                     /> */}
 
-                    {category && (
+                    {/* {category && (
                         <DropDownPicker
                             open={openProduct}
                             value={product}
@@ -552,7 +671,7 @@ const EmployeeHome = () => {
                             style={styles.dropdown}
                             dropDownContainerStyle={styles.dropdownContainer}
                         />
-                    )}
+                    )} */}
                     {product&&<DropDownPicker
                         open={open}
                         value={paymentSelect}
@@ -564,6 +683,25 @@ const EmployeeHome = () => {
                         style={styles.dropdown}
                         dropDownContainerStyle={styles.dropdownContainer}
                     />}
+                    <View style={styles.dateTimeContainer}>
+                    <TouchableOpacity
+          style={{ backgroundColor: 'blue', padding: 12, marginVertical: 8,borderRadius:10,marginHorizontal:15 }}
+          onPress={fetchLocation}
+        >
+          <Text style={{ color: 'white' }}>Get Location</Text>
+        </TouchableOpacity>
+        
+
+        {/* Photo Upload Button */}
+        <TouchableOpacity
+          style={{ backgroundColor: 'green', padding: 12, marginVertical: 8,borderRadius:10 }}
+          onPress={pickImage}
+        >
+          <Text style={{ color: 'white' }}>Upload Photo</Text>
+        </TouchableOpacity>
+        </View>
+
+        {image && <Text style={{ marginBottom: 8 }}>Image Selected: {image}</Text>}
                     <TouchableOpacity style={styles.button} onPress={addMarketingEntry}>
                         <Text style={styles.buttonText}>Submit</Text>
                     </TouchableOpacity>
@@ -572,36 +710,39 @@ const EmployeeHome = () => {
         }
     };
 
-        return (
-            <>
-                <View
-                    contentContainerStyle={styles.container}
-                    keyboardShouldPersistTaps="handled"
-                    horizontal={false}
-                >
-                    <View style={tw`flex-row m-2 ml-4`}>
-                        <TouchableOpacity
-                            style={[styles.tab, activeTab === 'Sales' && styles.activeTab]}
-                            onPress={() => setActiveTab('Sales')}
-                        >
-                            <Text style={styles.tabText}>Sales</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tab, activeTab === 'Marketing' && styles.activeTab]}
-                            onPress={() => setActiveTab('Marketing')}
-                        >
-                            <Text style={styles.tabText}>Marketing</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tab, activeTab === 'Service' && styles.activeTab]}
-                            onPress={() => setActiveTab('Service')}
-                        >
-                            <Text style={styles.tabText}>Service</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View>{renderContent()}</View>
+        return (    
+            <ScrollView
+      automaticallyAdjustKeyboardInsets={true}
+      contentContainerStyle={{
+        flex: 1
+      }}
+    >
+            <SafeAreaView style={tw`flex-1`}>
+              
+                <View style={tw`flex-row m-2 ml-4`}>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'Sales' && styles.activeTab]}
+                    onPress={() => setActiveTab('Sales')}
+                  >
+                    <Text style={styles.tabText}>Sales</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'Marketing' && styles.activeTab]}
+                    onPress={() => setActiveTab('Marketing')}
+                  >
+                    <Text style={styles.tabText}>Marketing</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'Service' && styles.activeTab]}
+                    onPress={() => setActiveTab('Service')}
+                  >
+                    <Text style={styles.tabText}>Service</Text>
+                  </TouchableOpacity>
                 </View>
-                </>
+                <View>{renderContent()}</View>
+            </SafeAreaView>
+            </ScrollView>
         );
 };
 
@@ -618,12 +759,19 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginVertical: 20,
     },
+    customerNameText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        paddingLeft:10
+      },
     tab: {
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 20,
         backgroundColor: '#ddd',
         marginHorizontal: 5,
+        height:50
     },
     activeTab: {
         backgroundColor: '#192841',
@@ -673,6 +821,7 @@ const styles = StyleSheet.create({
         marginHorizontal:10,
     },
     input: {
+        height:50,
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 15,
@@ -704,6 +853,24 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 5,
         elevation: 3,
+        height:50
+    },
+    inputd: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 15,
+        marginHorizontal:10,
+        marginBottom: 5,
+        paddingHorizontal:5,
+        color: "#333",
+        backgroundColor: '#fff',
+        width: '90%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
+        height:50
     },
     priceText: {
         fontSize: 18,

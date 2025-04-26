@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, FlatList, Image, StyleSheet, TouchableOp
 import { launchImageLibrary } from 'react-native-image-picker';
 import axios from 'axios';
 import FormData from 'form-data';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 const ExpenseItem = ({ expense, onImagePress }) => (
   <View style={styles.item}>
     <Text style={styles.itemText}>Expense Type: {expense.expense_type}</Text>
@@ -106,7 +106,7 @@ const Expenses = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Add New Expense</Text>
 
       <TextInput
@@ -171,7 +171,7 @@ const Expenses = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 
