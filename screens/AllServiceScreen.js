@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 
 import axios from 'axios';
 import { Table, Row, Rows } from 'react-native-table-component';
 import { Dropdown } from 'react-native-element-dropdown';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const EmployeeServicesAll = () => {
   const [employeeData, setEmployeeData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,8 +18,6 @@ const EmployeeServicesAll = () => {
       if (response.data && response.data.result) {
         console.log(response.data)
         setEmployeeData(response.data.result);
-
-        // Prepare data for the table
         const data = response.data.result.map(item => [
           item.customer_name,
           item.customer_phone,
@@ -48,12 +47,19 @@ const EmployeeServicesAll = () => {
 
   // Filter table data based on search input and selected filter type
   const filteredData = tableData.filter(row => {
-    const matchesSearch = row.some(cell => cell.toLowerCase().includes(search.toLowerCase()));
-    const matchesFilter = filter === 'All' || row[9] === filter; // Index 9 is 'service_type'
+    const matchesSearch = search
+      ? row.some(cell => String(cell).toLowerCase().includes(search.toLowerCase()))
+      : true;
+  
+    const matchesFilter = filter === 'All' || row[9] === filter;
+  
     return matchesSearch && matchesFilter;
   });
+  
+  
 
   return (
+    <SafeAreaView style={{flex:1}}>
     <ScrollView style={styles.scrollView}>
     <View style={styles.container}>
       {loading ? (
@@ -102,6 +108,7 @@ const EmployeeServicesAll = () => {
       )}
     </View>
     </ScrollView>
+    </SafeAreaView>
   );
 };
 

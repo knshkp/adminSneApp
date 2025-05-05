@@ -1,23 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Modal, Keyboard, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import axios from 'axios';
 import FormData from 'form-data';
-import { SafeAreaView } from 'react-native-safe-area-context';
-const ExpenseItem = ({ expense, onImagePress }) => (
-  <View style={styles.item}>
-    <Text style={styles.itemText}>Expense Type: {expense.expense_type}</Text>
-    <Text style={styles.itemText}>Mode of Payment: {expense.mode_payment}</Text>
-    <Text style={styles.itemText}>Amount: {expense.amount}</Text>
-    {expense.photo && (
-      <TouchableOpacity onPress={() => onImagePress(`${expense.photo}`)}>
-        <Text>Show Bill</Text>
-        <Image source={{ uri: `https://sangramindustry-i5ws.onrender.com:3000/${expense.photo}` }} style={styles.image} />
-      </TouchableOpacity>
-    )}
-  </View>
-);
-
+import tw from 'tailwind-react-native-classnames';
 const Expenses = () => {
   const [modeOfExpense, setModeOfExpense] = useState('');
   const [modeOfPayment, setModeOfPayment] = useState('');
@@ -26,19 +13,19 @@ const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState('');
 
   useEffect(() => {
-    fetchExpenses(); // Fetch expenses when the component mounts
+    fetchExpenses();
   }, []);
 
   const fetchExpenses = () => {
     setLoading(true);
     axios
-      .get('https://sangramindustry-i5ws.onrender.com:3000/employee/getExpense')
+      .get('https://sangramindustry-i5ws.onrender.com/employee/getExpense')
       .then((response) => {
         setExpenses(response.data);
-        console.log(response)
         setLoading(false);
       })
       .catch((error) => {
@@ -55,6 +42,7 @@ const Expenses = () => {
     data.append('amount', paymentQuantity);
     data.append('expense_type', modeOfExpense);
     data.append('mode_payment', modeOfPayment);
+
     if (photoUri) {
       const fileName = photoUri.split('/').pop();
       const fileType = fileName.split('.').pop();
@@ -78,13 +66,14 @@ const Expenses = () => {
     axios
       .request(config)
       .then((response) => {
-        setLoading(false);
         console.log(JSON.stringify(response.data));
-        fetchExpenses(); // Refresh the list after adding a new expense
+        setLoading(false);
+        fetchExpenses();
         setModeOfExpense('');
         setModeOfPayment('');
         setPaymentQuantity('');
         setPhotoUri('');
+        setIsAddModalVisible(false);
       })
       .catch((error) => {
         console.log(error);
@@ -105,73 +94,126 @@ const Expenses = () => {
     setIsModalVisible(true);
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Add New Expense</Text>
+  const renderExpenseItem = ({ item }) => {
+    const createdAt = new Date(item.createdAt);
+    const formattedDate = createdAt.toLocaleDateString();
+    const formattedTime = createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      <TextInput
-        style={styles.input}
-        placeholder="Expense Type"
-        value={modeOfExpense}
-        onChangeText={setModeOfExpense}
-        placeholderTextColor="#888"
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Payment Mode"
-        value={modeOfPayment}
-        onChangeText={setModeOfPayment}
-        placeholderTextColor="#888"
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Amount"
-        value={paymentQuantity}
-        onChangeText={setPaymentQuantity}
-        keyboardType="numeric"
-        placeholderTextColor="#888"
-      />
-      
-      <TouchableOpacity style={styles.photoButton} onPress={selectPhoto}>
-        <Text style={styles.photoButtonText}>Select Photo</Text>
-      </TouchableOpacity>
-      {photoUri ? <Image source={{ uri: photoUri }} style={styles.imagePreview} /> : null}
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#4287f5" /> // Display the loading spinner when loading is true
-      ) : (
-        <TouchableOpacity style={styles.addButton} onPress={addExpense} disabled={loading}>
-          <Text style={styles.addButtonText}>Save</Text>
-        </TouchableOpacity>
-      )}
-
-      <Text style={styles.header}>Expense List</Text>
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#4287f5" /> // Loading indicator for fetching expenses
-      ) : (
-        <FlatList
-          data={expenses}
-          renderItem={({ item }) => <ExpenseItem expense={item} onImagePress={handleImagePress} />}
-          keyExtractor={(item, index) => index.toString()}
-          style={styles.list}
-        />
-      )}
-
-      {/* Modal for Image Preview */}
-      <Modal visible={isModalVisible} transparent={true} onRequestClose={() => setIsModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Image source={{ uri: selectedImageUri }} style={styles.modalImage} />
-            <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
+    return (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.tableRow}>
+          <Text style={styles.cell}>{item.expense_type}</Text>
+          <Text style={styles.cell}>{item.mode_payment}</Text>
+          <Text style={styles.cell}>{item.amount}</Text>
+          <Text style={styles.cell}>{formattedDate}</Text>
+          <Text style={styles.cell}>{formattedTime}</Text>
+          <TouchableOpacity onPress={() => handleImagePress(`https://sangramindustry-i5ws.onrender.com:3000/${item.photo}`)}>
+            <Text style={[styles.cell, { color: '#4287f5', textDecorationLine: 'underline' }]}>View</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
-    </SafeAreaView>
+      </ScrollView>
+    );
+  };
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container}>
+
+        <TouchableOpacity style={styles.addExpenseButton} onPress={() => setIsAddModalVisible(true)}>
+          <Text style={styles.addExpenseButtonText}>Add Expense</Text>
+        </TouchableOpacity>
+
+        <View style={{ flex: 1 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View>
+              <View style={styles.tableHeader}>
+                <Text style={styles.headerCell}>Expense Type</Text>
+                <Text style={styles.headerCell}>Payment Mode</Text>
+                <Text style={styles.headerCell}>Amount</Text>
+                <Text style={styles.headerCell}>Date</Text>
+                <Text style={styles.headerCell}>Time</Text>
+                <Text style={styles.headerCell}>Photo</Text>
+              </View>
+            </View>
+          </ScrollView>
+
+          {loading ? (
+        <ActivityIndicator size="large" color="#4287f5" style={tw`mt-20`} />
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.table}>
+            <View style={styles.header}>
+              <Text style={styles.headerText}>Expense Type</Text>
+              <Text style={styles.headerText}>Payment Type</Text>
+              <Text style={styles.headerText}>Amount</Text>
+              <Text style={styles.headerText}>Date</Text>
+              <Text style={styles.headerText}>Time</Text>
+              <Text style={styles.headerText}>Photo</Text>
+            </View>
+
+            <FlatList
+              data={expenses}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderExpenseItem}
+              scrollEnabled={false}
+            />
+          </View>
+        </ScrollView>
+      )}
+        </View>
+
+        {/* View Image Modal */}
+        <Modal visible={isModalVisible} transparent={true} onRequestClose={() => setIsModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Image source={{ uri: selectedImageUri }} style={styles.modalImage} />
+              <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Add Expense Modal */}
+        <Modal visible={isAddModalVisible} animationType="slide" transparent={true} onRequestClose={() => setIsAddModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TextInput
+                style={styles.input}
+                placeholder="Expense Type"
+                value={modeOfExpense}
+                onChangeText={setModeOfExpense}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Payment Mode"
+                value={modeOfPayment}
+                onChangeText={setModeOfPayment}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Amount"
+                value={paymentQuantity}
+                onChangeText={setPaymentQuantity}
+                keyboardType="numeric"
+              />
+              <TouchableOpacity style={styles.photoButton} onPress={selectPhoto}>
+                <Text style={styles.photoButtonText}>Select Photo</Text>
+              </TouchableOpacity>
+              {photoUri ? <Image source={{ uri: photoUri }} style={styles.imagePreview} /> : null}
+
+              <TouchableOpacity style={styles.modalButton} onPress={addExpense}>
+                <Text style={styles.modalButtonText}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: 'red' }]} onPress={() => setIsAddModalVisible(false)}>
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -181,12 +223,46 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f7f7f7',
   },
-  header: {
-    fontSize: 28,
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#4287f5',
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    borderRadius: 5,
+    marginBottom: 10,
+    minWidth: 800,
+  },
+  headerCell: {
+    flex: 1,
+    color: '#fff',
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
     textAlign: 'center',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    paddingVertical: 15,
+    paddingHorizontal: 5,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    minWidth: 800,
+  },
+  cell: {
+    flex: 1,
+    textAlign: 'center',
+    color: '#333',
+  },
+  addExpenseButton: {
+    backgroundColor: '#28a745',
+    padding: 15,
+    marginVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  addExpenseButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   input: {
     height: 50,
@@ -196,10 +272,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 15,
     backgroundColor: '#fff',
+    width: 250,
   },
   photoButton: {
     backgroundColor: '#4287f5',
-    padding: 15,
+    padding: 10,
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 10,
@@ -207,56 +284,12 @@ const styles = StyleSheet.create({
   photoButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    backgroundColor: '#28a745',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  list: {
-    marginTop: 20,
-  },
-  item: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-  },
-  itemText: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
-  },
-  imagePreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignSelf: 'center',
-  },
-  image: {
-    width: 50,
-    height: 50,
-    borderRadius: 10,
-    marginTop: 10,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
   },
   modalContent: {
     backgroundColor: '#fff',
@@ -273,11 +306,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#4287f5',
     padding: 10,
     borderRadius: 5,
-    alignItems: 'center',
   },
   closeButtonText: {
     color: '#fff',
     fontSize: 16,
+  },
+  modalButton: {
+    backgroundColor: '#28a745',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: 'center',
+    width: 250,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginBottom: 10,
   },
 });
 

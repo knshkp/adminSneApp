@@ -12,6 +12,7 @@ import EmployeeTable from './EmployeeReport';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 import { KeyboardAvoidingView } from 'react-native';
+import EmployeeExpenseReport from './EmployeeExpenseProfile';
 const Tab = createBottomTabNavigator()
 function BottomNavigate() {
   return (
@@ -25,13 +26,13 @@ function BottomNavigate() {
     tabBarShowLabel: false,
     tabBarStyle: {
       position: 'absolute',
-      bottom: 20,
-      left: 20,
-      right: 20,
+      bottom: 30,
+      left: 10,
+      right: 10,
       elevation: 5,
       backgroundColor: '#fff',
-      borderRadius: 15,
-      height: 70,
+      borderRadius: 45,
+      height: 85,
       shadowColor: '#000',
       shadowOpacity: 0.1,
       shadowOffset: { width: 0, height: 10 },
@@ -45,11 +46,9 @@ function BottomNavigate() {
             <View style={{
               alignItems: 'center',
               justifyContent: 'center',
-              top:  0,
-              width:  25,
-              height:  25,
-              padding: focused ? 8 : 0,
-              borderRadius: 5,
+              top:  12,
+              padding: focused ? 20 : 0,
+              borderRadius: 35,
               backgroundColor: focused ? '#001B48' : '#FFFFFF', // Change background color based on focus
             }}>
               <Image
@@ -60,16 +59,14 @@ function BottomNavigate() {
           ),
           headerShown: false
         }} />
-            <Tab.Screen name="Expenses" component={Expenses} options={{
+            <Tab.Screen name="Expenses" component={EmployeeExpenseReport} options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={{
               alignItems: 'center',
               justifyContent: 'center',
-              top:  0,
-              width:  25,
-              height:  25,
-              padding: focused ? 8 : 0,
-              borderRadius: 5,
+              top:  12,
+              padding: focused ? 20 : 0,
+              borderRadius: 35,
               backgroundColor: focused ? '#001B48' : '#FFFFFF', // Change background color based on focus
             }}>
               <Image
@@ -86,11 +83,9 @@ function BottomNavigate() {
             <View style={{
               alignItems: 'center',
               justifyContent: 'center',
-              top:  0,
-              width:  25,
-              height:  25,
-              padding: focused ? 8 : 0,
-              borderRadius: 5,
+              top:  12,
+              padding: focused ? 20 : 0,
+              borderRadius: 35,
               backgroundColor: focused ? '#001B48' : '#FFFFFF', // Change background color based on focus
             }}>
               <Image
@@ -108,11 +103,9 @@ function BottomNavigate() {
             <View style={{
               alignItems: 'center',
               justifyContent: 'center',
-              top:  0,
-              width:  25,
-              height:  25,  
-              padding: focused ? 8 : 0,
-              borderRadius: 5,
+              top:  12,  
+              padding: focused ? 20 : 0,
+              borderRadius: 35,
               backgroundColor: focused ? '#001B48' : '#FFFFFF', // Change background color based on focus
             }}>
               <Image
@@ -131,10 +124,9 @@ function BottomNavigate() {
       <View style={{
         alignItems: 'center',
         justifyContent: 'center',
-        width: 25,
-        height: 25,
-        padding: focused ? 1 : 0,
-        borderRadius: 5,
+        top:12,
+        padding: focused ? 20 : 0,
+        borderRadius: 35,
         backgroundColor: focused ? '#001B48' : '#FFFFFF',
       }}>
         <Text>📊</Text>
@@ -151,16 +143,16 @@ function BottomNavigate() {
   })}
 />
 
-      {/* <Tab.Screen name="Profile" component={Profile} options={{
+      <Tab.Screen name="Profile" component={Profile} options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={{
               alignItems: 'center',
               justifyContent: 'center',
-              top:  0,
+              top:  12,
               width:  30,
               height:  30,
-              padding: focused ? 8 : 0,
-              borderRadius: 5,
+              padding: focused ? 20 : 0,
+              borderRadius: 35,
               backgroundColor: focused ? '#001B48' : '#FFFFFF', // Change background color based on focus
             }}>
               <Image
@@ -170,7 +162,7 @@ function BottomNavigate() {
             </View>
           ),
           headerShown: false
-        }} /> */}
+        }} />
 
     </Tab.Navigator>
     </KeyboardAvoidingView>
