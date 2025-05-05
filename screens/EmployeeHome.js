@@ -13,6 +13,12 @@ import { KeyboardAvoidingView, Platform } from 'react-native';
 import { Printer, PrintTypes } from 'react-native-thermal-receipt-printer';
 import * as ImagePicker from 'react-native-image-picker'; // For selecting images
 import Geolocation from '@react-native-community/geolocation';
+import SalesTab from './SalesTab';
+import MarketingTab from './MarketingTab';
+import ServiceTab from './ServiceTab';
+import ImageResizer from 'react-native-image-resizer';
+import { useFocusEffect } from '@react-navigation/native';
+import { getFileSize } from 'react-native-fs';
 const EmployeeHome = () => {
     const [vendors, setVendors] = useState([]);
     const [items, setItems] = useState([
@@ -52,6 +58,31 @@ const EmployeeHome = () => {
     const [isPincodeFocused,setIsPincodeFocused]=useState(false);
     const [isCityFocused,setIsCityFocused]=useState(false);
     const [isStateFocused,setIsStateFocused]=useState(true);
+    const checkFileSize = async (uri) => {
+        try {
+          const fileStats = await getFileSize(uri);
+          const fileSizeInMB = fileStats / 1024 / 1024; // Convert bytes to MB
+          return fileSizeInMB;
+        } catch (error) {
+          console.error('Error getting file size:', error);
+          return 0;
+        }
+      };
+      
+      // Check size before uploading
+      
+      const compressImage = async (imageUri) => {
+        try {
+          // Resize the image to 800x600 and reduce quality to 50%
+          const resizedImage = await ImageResizer.createResizedImage(imageUri, 800, 600, 'JPEG', 50);
+          console.log('Compressed Image URI:', resizedImage.uri);
+          return resizedImage.uri;
+        } catch (error) {
+          console.log('Error compressing image:', error);
+          return imageUri; // If compression fails, return the original URI
+        }
+      };
+
 
     const [marketingCategory, setMarketingCategory] = useState([
         { label: "Weighing Scale", value: "weighing_scale" },
@@ -71,14 +102,26 @@ const EmployeeHome = () => {
         );
       };
     
-      // Image upload functionality
       const pickImage = () => {
         const options = {
+          mediaType: 'photo', // important to specify
           noData: true,
         };
+      
         ImagePicker.launchImageLibrary(options, (response) => {
-          if (response.assets && response.assets.length > 0) {
-            setImage(response.assets[0].uri); // Store image URI in the state
+          if (response.didCancel) {
+            console.log('User cancelled image picker');
+          } else if (response.errorCode) {
+            console.log('ImagePicker Error: ', response.errorMessage);
+          } else if (response.assets && response.assets.length > 0) {
+            const selectedImage = response.assets[0];
+            console.log('Selected Image:', selectedImage);
+      
+            setImage({
+              uri: selectedImage.uri,
+              type: selectedImage.type,
+              name: selectedImage.fileName || `photo_${Date.now()}.jpg`,
+            });
           }
         });
       };
@@ -175,43 +218,61 @@ const EmployeeHome = () => {
             console.error('Error fetching state:', error);
         }
     };
-
-      const addMarketingEntry = async () => {
-        const employeeDetails=await AsyncStorage.getItem('employeeDetails')
-        const finalEmployee=JSON.parse(employeeDetails)
-        const body = {
-          seller_phone: finalEmployee[0].phone_number,
-          customer_name: customerName,
-          customer_phone: mobileNumber,
-          customer_address: address,
-          customer_state:state,
-          customer_city:city,
-          customer_pincode:pin,
-          category_name: category,
-          product_name: product,
-          product_price: price,
-          discount: discount,
-          final_price: price - (discount * price) / 100,
-          payment_method: paymentSelect,
-          service_type: activeTab,
-          shop_name:shop
-        };
-        console.log(body)
-      
-        try {
-          const response = await axios.post('https://sangramindustry-i5ws.onrender.com/employeeServices/addEmployeeService', body, {
+    
+    const addMarketingEntry = async () => {
+      const employeeDetails = await AsyncStorage.getItem('userDetails');
+      const finalEmployee = JSON.parse(employeeDetails);
+      console.log(`>>>>>>${JSON.stringify(finalEmployee)}`);
+    
+      const formData = new FormData();
+      formData.append('seller_phone', finalEmployee.phone_number);
+      formData.append('customer_name', customerName);
+      formData.append('customer_phone', mobileNumber);
+      formData.append('customer_address', address);
+      formData.append('customer_state', state);
+      formData.append('customer_city', city);
+      formData.append('customer_pincode', pin);
+      formData.append('category_name', category);
+      formData.append('service_type', activeTab);
+      formData.append('shop_name', shop);
+      formData.append('customer_latitude', location.latitude.toString());
+      formData.append('customer_longitude', location.longitude.toString());
+      const compressedImageUri = await compressImage(image.uri);
+    //   const fileSize = await checkFileSize(compressedImageUri);
+    //   if (fileSize > 10) {
+    //     Alert.alert('Error', 'File size exceeds the 10MB limit!');
+    //   } else {
+    //     // Proceed with uploading the image
+    //   }
+    
+      // Assuming `image` is an object like { uri, type, name }
+      formData.append('file', {
+        uri: compressedImageUri,
+        type: image.type || 'image/jpeg',
+        name: image.fileName || `photo_${Date.now()}.jpg`,
+      });
+      console.log('>>>> FormData:', formData);
+      console.log(image);
+    
+      try {
+        const response = await axios.post(
+          'https://sangramindustry-i5ws.onrender.com/employeeServices/addEmployeeService',
+          formData,
+          {
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'multipart/form-data',
             },
-          });
-          Alert.alert('Employee Details Added')
-        } catch (error) {
-            Alert.alert('Detail Not Added')
-          console.error('There was a problem with the axios operation:', error);
-        }
-      };
-
-    useEffect(() => {
+          }
+        );
+        console.log(`>>>> Response: ${JSON.stringify(response)}`);
+        Alert.alert('Marketing Details Added');
+      } catch (error) {
+        console.error('There was a problem with the axios operation:', error);
+        Alert.alert('Detail Not Added');
+      }
+    };
+    
+    useFocusEffect(React.useCallback(() => {
         
         const fetchVendorData = async () => {
             try {
@@ -248,8 +309,8 @@ const EmployeeHome = () => {
 
         fetchVendorData();
         fetchCategories();
-    }, []);
-    useEffect(()=>{
+    }, []));
+    useFocusEffect(React.useCallback(()=>{
         const updateEntry=()=>{
             setCategory('');
             setAddress('');
@@ -262,7 +323,7 @@ const EmployeeHome = () => {
             setPaymentSelect("");
         }
         updateEntry()
-    },[activeTab]);
+    },[]));
 
     useEffect(() => {
         if (category) {
@@ -290,458 +351,156 @@ const EmployeeHome = () => {
     const renderContent = () => {
         if (activeTab === 'Sales') {
             return (
-                <>
-                <View style={tw`flex-row m-2 ml-4`}>
-                  <TouchableOpacity
-                    style={[styles.tab, activeTab === 'Sales' && styles.activeTab]}
-                    onPress={() => setActiveTab('Sales')}
-                  >
-                    <Text style={styles.tabText}>Sales</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.tab, activeTab === 'cashSales' && styles.activeTab]}
-                    onPress={() => setActiveTab('cashSales')}
-                  >
-                    <Text style={styles.tabText}>Cash Sales</Text>
-                  </TouchableOpacity>
-                </View>
-                {/* <Text>Hi </Text>
-                    <View style={styles.dateTimeContainer}>
-                        <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
-                        <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>
-                    </View>
-                    <View style={styles.dateTimeContainer}>
-                        <Text style={{marginLeft:12}}>Name</Text>
-                        <Text style={{marginRight:120}}> Phone</Text>
-                    </View> */}
-                    <View style={styles.dateTimeContainer}>
-                    <TextInput
-                        style={styles.inputs}
-                        placeholder="Customer Name"
-                        value={customerName}
-                        onChangeText={setCustomerName}
-                    />
-
-                    <TextInput
-                        style={styles.inputs}
-                        placeholder="Mobile Number"
-                        keyboardType="phone-pad"
-                        value={mobileNumber}
-                        maxLength={10}
-                        onChangeText={setMobileNumber}
-                    />
-                    </View>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Address"
-                        value={address}
-                        onChangeText={setAddress}
-                    />
-                    <DropDownPicker
-                        open={openCategory}
-                        value={category}
-                        items={categoryItems}
-                        setOpen={setOpenCategory}
-                        setValue={setCategory}
-                        setItems={setCategoryItems}
-                        placeholder="Select Category"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
-                    />
-                    {category && (
-                        <DropDownPicker
-                            open={openProduct}
-                            value={product}
-                            items={productItems}
-                            setOpen={setOpenProduct}
-                            setValue={setProduct}
-                            setItems={setProductItems}
-                            propogateSwipe={true}
-                            placeholder="Select Product"
-                            style={styles.dropdown}
-                            dropDownContainerStyle={styles.dropdownContainer}
-                        />
-                    )}
-                    {product && (
-                        <Text style={styles.priceText}>Price: {price}</Text>
-                    )}
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Discount"
-                        keyboardType="numeric"
-                        value={discount}
-                        onChangeText={setDiscount}
-                    />
-                    {product && (
-                        <Text style={styles.priceText}>Final Price: {price - (discount * price) / 100}</Text>
-                    )}
-                    {product&&<DropDownPicker
-                        open={open}
-                        value={paymentSelect}
-                        items={items}
-                        setOpen={setOpen}
-                        setValue={setPaymentSelect}
-                        setItems={setItems}
-                        placeholder="Select Payment Method"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
-                    />}
-                    <View style={styles.dateTimeContainer}>
-                    <TouchableOpacity style={styles.button} onPress={addApi}>
-                        <Text style={styles.buttonText}>Submit</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={()=>{addApi(); printBill();}}>
-                        <Text style={styles.buttonText}>Submit & Print</Text>
-                    </TouchableOpacity>
-                    </View>
-                
-                </>
+                <SalesTab
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                customerName={customerName}
+                setCustomerName={setCustomerName}
+                mobileNumber={mobileNumber}
+                setMobileNumber={setMobileNumber}
+                address={address}
+                setAddress={setAddress}
+                openCategory={openCategory}
+                setOpenCategory={setOpenCategory}
+                category={category}
+                setCategory={setCategory}
+                categoryItems={categoryItems}
+                setCategoryItems={setCategoryItems}
+                openProduct={openProduct}
+                setOpenProduct={setOpenProduct}
+                product={product}
+                setProduct={setProduct}
+                productItems={productItems}
+                setProductItems={setProductItems}
+                price={price}
+                setPrice={setPrice}
+                discount={discount}
+                setDiscount={setDiscount}
+                open={open}
+                setOpen={setOpen}
+                paymentSelect={paymentSelect}
+                setPaymentSelect={setPaymentSelect}
+                items={items}
+                setItems={setItems}
+                addApi={addApi}
+                printBill={printBill}
+                />
             );
         } 
-        else if(activeTab==="cashSales"){
-            <>
-            <Text>Cash Sales</Text>
-            <TextInput
-                        style={styles.inputs}
-                        placeholder="Customer Name"
-                        value={customerName}
-                        onChangeText={setCustomerName}
-                    />
-                    <TextInput
-                        style={styles.inputs}
-                        placeholder="Price"
-                        value={price}
-                        onChangeText={setPrice}
-                    />
-            </>
-
-
-        }else if (activeTab === 'Service') {
+        else if (activeTab === 'Service') {
             return (
-                <>
-                
-                    {/* <View style={styles.dateTimeContainer}>
-                        <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
-                        <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>
-                    </View>
-                    <View style={styles.dateTimeContainer}>
-                        <Text style={{marginLeft:12}}>Name</Text>
-                        <Text style={{marginRight:120}}> Phone</Text>
-                    </View> */}
-                    <View style={styles.dateTimeContainer}>
-                    <TextInput
-                        style={styles.inputs}
-                        placeholder="Customer Name"
-                        value={customerName}
-                        onChangeText={setCustomerName}
-                    />
-                    <TextInput
-                        style={styles.inputs}
-                        placeholder="Mobile Number"
-                        keyboardType="phone-pad"
-                        maxLength={10}
-                        value={mobileNumber}
-                        onChangeText={setMobileNumber}
-                    />
-                    </View>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Address"
-                        value={address}
-                        onChangeText={setAddress}
-                    />
-                    <DropDownPicker
-                        open={openCategory}
-                        value={category}
-                        items={categoryItems}
-                        setOpen={setOpenCategory}
-                        setValue={setCategory}
-                        setItems={setCategoryItems}
-                        placeholder="Select Category"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
-                    />
-                    {category && (
-                        <DropDownPicker
-                            open={openProduct}
-                            value={product}
-                            items={productItems}
-                            setOpen={setOpenProduct}
-                            setValue={setProduct}
-                            setItems={setProductItems}
-                            
-                            placeholder="Select Product"
-                            style={styles.dropdown}
-                            dropDownContainerStyle={styles.dropdownContainer}
-                        />
-                    )}
-                    {product && (
-                        <Text style={styles.priceText}>Price: {price}</Text>
-                    )}
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Discount"
-                        keyboardType="numeric"
-                        value={discount}
-                        onChangeText={setDiscount}
-                    />
-                    {product && (
-                        <Text style={styles.priceText}>Final Price: {price - (discount * price) / 100}</Text>
-                    )}
-      {product&&<DropDownPicker
-        open={open}
-        value={paymentSelect}
-        items={items}
-        setOpen={setOpen}
-        setValue={setPaymentSelect}
-        setItems={setItems}
-        placeholder="Select Payment Method"
-        style={styles.dropdown}
-        dropDownContainerStyle={styles.dropdownContainer}
-      />}
-
-      {/* Conditional Rendering for QR Code when "UPI" is selected */}
-      {paymentSelect === 'upi' && (
-        <View>
-          <Text style={styles.qrText}>Scan this QR code to pay via UPI:</Text>
-          <Image
-            source={{uri:"https://imgs.search.brave.com/mNOSUEuvzvmR_GB5ndP8qE_R1mFIUliIU4pn-oDjIEk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jMS5p/bWcycXIuY29tL2lt/YWdlcy9zaW1wbGVf/cXJjb2RlLnBuZz94/LW9zcy1wcm9jZXNz/PWltYWdlL3F1YWxp/dHksUV84MA"}}  // Replace with your QR code image path
-            style={tw`h-40 w-40 mx-24`}
-          />
-        </View>
-      )}
-
-                    <TouchableOpacity style={styles.button} onPress={addApi}>
-                        <Text style={styles.buttonText}>Submit</Text>
-                    </TouchableOpacity>
-                
-                </>
+                <ServiceTab     
+                    customerName={customerName}
+                    setCustomerName={setCustomerName}
+                    mobileNumber={mobileNumber}
+                    setMobileNumber={setMobileNumber}
+                    address={address}
+                    setAddress={setAddress}
+                    openCategory={openCategory}
+                    setOpenCategory={setOpenCategory}
+                    category={category}
+                    setCategory={setCategory}
+                    categoryItems={marketingCategory}
+                    setCategoryItems={setMarketingCategory}
+                    openProduct={false}
+                    setOpenProduct={() => {}}
+                    product={null}
+                    setProduct={() => {}}
+                    productItems={[]}
+                    setProductItems={() => {}}
+                    price={100}  // Example value
+                    discount={0}  // Example value
+                    setDiscount={() => {}}
+                    open={false}
+                    setOpen={() => {}}
+                    paymentSelect={paymentSelect}
+                    setPaymentSelect={setPaymentSelect}
+                    items={items}
+                    setItems={setItems}
+                    addApi={addApi}
+                />
             );
         } else if (activeTab === 'Marketing') {
             return (
-                <>
-                {/* <Text style={tw`font-bold text-black ml-6`}>Hi</Text>
-                <View style={styles.dateTimeContainer}>
-                        <Text style={styles.dateText}>{moment().format('Do MMMM YYYY')}</Text>
-                        <Text style={styles.datesText}>{moment().format('h:mm a')}</Text>
-                    </View>
-                    <View style={styles.dateTimeContainer}>
-                        <Text style={{marginLeft:12}}>Name</Text>
-                        <Text style={{marginRight:120}}> Phone</Text>
-                    </View> */}
-                    <View style={styles.dateTimeContainer}>
-                    <View >
-                        {/* Show the "Customer Name" label only if the input is focused or if the user has entered a name */}
-                        {(isFocused || customerName) && (
-                            <Text style={styles.customerNameText}>Customer Name</Text>
-                        )}
-
-                        {/* TextInput for entering customer name */}
-                        <TextInput
-                            style={styles.inputd}
-                            placeholder="Enter Customer Name"
-                            value={customerName}
-                            onChangeText={setCustomerName}
-                            onFocus={() => setIsFocused(true)} // Set focus state to true when input is focused
-                            onBlur={() => setIsFocused(false)} // Set focus state to false when input is blurred
-                        />
-                        </View>
-                        <View >
-                        {/* Show the "Customer Name" label only if the input is focused or if the user has entered a name */}
-                        {(isMobileFocused || mobileNumber) && (
-                            <Text style={styles.customerNameText}>Mobile Number</Text>
-                        )}
-
-                    <TextInput
-                        style={styles.inputd}
-                        placeholder="Mobile Number"
-                        keyboardType="phone-pad"
-                        maxLength={10}
-                        onBlur={() => setIsMobileFocused(false)}
-                        onFocus={() => setIsMobileFocused(true)}
-                        value={mobileNumber}
-                        onChangeText={setMobileNumber}
-                    />
-                    </View>
-                    </View>
-                    
-                    <DropDownPicker
-                        open={openCategory}
-                        value={category}
-                        items={marketingCategory}
-                        setOpen={setOpenCategory}
-                        setValue={setCategory}
-                        setItems={setMarketingCategory}
-                        placeholder="Select Category"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
-                    />
-                    <View >
-                        {(isShopFocused || shop) && (
-                            <Text style={styles.customerNameText}>Shop Name</Text>
-                        )}
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Shop Name"
-                        value={shop}
-                        onChangeText={setShop}
-                        onFocus={() => setIsShopFocused(true)}
-                    />
-                    </View>
-                    <View >
-                        {(isAddressFocused || address) && (
-                            <Text style={styles.customerNameText}>Address</Text>
-                        )}
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Address"
-                        value={address}
-                        onFocus={() => setIsAddressFocused(true)}
-                        onChangeText={setAddress}
-                    /></View>
-                                        <View >
-                        {( pin) && (
-                            <Text style={styles.customerNameText}>PinCode</Text>
-                        )}
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Pincode"
-                        onFocus={() => setIsPincodeFocused(true)}
-                        value={pin}
-                        maxLength={6}
-                        keyboardType='phone-pad'
-                        onChangeText={(text)=>{
-                            setPin(text);
-                            if(text.length === 6){
-                                fetchState(text);
-                            }
-                    }}/>
-                    </View>
-                    <View style={styles.dateTimeContainer}>
-                    <View >
-                        {( city) && (
-                            <Text style={styles.customerNameText}>City</Text>
-                        )}
-                    <TextInput
-                        style={styles.inputd}
-                        placeholder="City"
-                        onFocus={() => setIsCityFocused(true)}
-                        value={city}
-                        onChangeText={setCity}
-                    />
-                    </View>
-                    <View >
-                        {( state) && (
-                            <Text style={styles.customerNameText}>State:</Text>
-                        )}
-                    <TextInput
-                        style={styles.inputd}
-                        placeholder="State"
-                        value={state}
-                        onFocus={() => setIsStateFocused(true)}
-                        onChangeText={setState}
-                    />
-                    </View>
-                    </View>
-
-                    {/* <TextInput
-                        style={styles.input}
-                        placeholder="Description"
-                        value={address}
-                        onChangeText={setAddress}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Machine"
-                        value={city}
-                        onChangeText={setCity}
-                    /> */}
-
-                    {/* {category && (
-                        <DropDownPicker
-                            open={openProduct}
-                            value={product}
-                            items={productItems}
-                            setOpen={setOpenProduct}
-                            setValue={setProduct}
-                            setItems={setProductItems}
-                            
-                            placeholder="Select Product"
-                            style={styles.dropdown}
-                            dropDownContainerStyle={styles.dropdownContainer}
-                        />
-                    )} */}
-                    {product&&<DropDownPicker
-                        open={open}
-                        value={paymentSelect}
-                        items={items}
-                        setOpen={setOpen}
-                        setValue={setPaymentSelect}
-                        setItems={setItems}
-                        placeholder="Select Payment Method"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
-                    />}
-                    <View style={styles.dateTimeContainer}>
-                    <TouchableOpacity
-          style={{ backgroundColor: 'blue', padding: 12, marginVertical: 8,borderRadius:10,marginHorizontal:15 }}
-          onPress={fetchLocation}
-        >
-          <Text style={{ color: 'white' }}>Get Location</Text>
-        </TouchableOpacity>
-        
-
-        {/* Photo Upload Button */}
-        <TouchableOpacity
-          style={{ backgroundColor: 'green', padding: 12, marginVertical: 8,borderRadius:10 }}
-          onPress={pickImage}
-        >
-          <Text style={{ color: 'white' }}>Upload Photo</Text>
-        </TouchableOpacity>
-        </View>
-
-        {image && <Text style={{ marginBottom: 8 }}>Image Selected: {image}</Text>}
-                    <TouchableOpacity style={styles.button} onPress={addMarketingEntry}>
-                        <Text style={styles.buttonText}>Submit</Text>
-                    </TouchableOpacity>
-                    </>
+                <MarketingTab
+                    customerName={customerName}
+                    setCustomerName={setCustomerName}
+                    mobileNumber={mobileNumber}
+                    setMobileNumber={setMobileNumber}
+                    shop={shop}
+                    setShop={setShop}
+                    address={address}
+                    setAddress={setAddress}
+                    pin={pin}
+                    setPin={setPin}
+                    city={city}
+                    setCity={setCity}
+                    state={state}
+                    setState={setState}
+                    image={image}
+                    setImage={setImage}
+                    openCategory={openCategory}
+                    setOpenCategory={setOpenCategory}
+                    category={category}
+                    setCategory={setCategory}
+                    marketingCategory={marketingCategory}
+                    setMarketingCategory={setMarketingCategory}
+                    open={open}
+                    setOpen={setOpen}
+                    paymentSelect={paymentSelect}
+                    setPaymentSelect={setPaymentSelect}
+                    items={items}
+                    setItems={setItems}
+                    fetchState={fetchState}
+                    fetchLocation={fetchLocation}
+                    pickImage={pickImage}
+                    addMarketingEntry={addMarketingEntry}
+                    isFocused={isFocused}
+                    setIsFocused={setIsFocused}
+                    isMobileFocused={isMobileFocused}
+                    setIsMobileFocused={setIsMobileFocused}
+                    isShopFocused={isShopFocused}
+                    setIsShopFocused={setIsShopFocused}
+                    isAddressFocused={isAddressFocused}
+                    setIsAddressFocused={setIsAddressFocused}
+                    isPincodeFocused={isPincodeFocused}
+                    setIsPincodeFocused={setIsPincodeFocused}
+                    isCityFocused={isCityFocused}
+                    setIsCityFocused={setIsCityFocused}
+                    isStateFocused={isStateFocused}
+                    setIsStateFocused={setIsStateFocused}
+                    product={product}
+                />
             );
         }
     };
 
         return (    
-            <ScrollView
-      automaticallyAdjustKeyboardInsets={true}
-      contentContainerStyle={{
-        flex: 1
-      }}
-    >
-            <SafeAreaView style={tw`flex-1`}>
-              
-                <View style={tw`flex-row m-2 ml-4`}>
-                  <TouchableOpacity
-                    style={[styles.tab, activeTab === 'Sales' && styles.activeTab]}
-                    onPress={() => setActiveTab('Sales')}
-                  >
-                    <Text style={styles.tabText}>Sales</Text>
-                  </TouchableOpacity>
+            <ScrollView automaticallyAdjustKeyboardInsets={true} contentContainerStyle={{ flex: 1 }}>
+                <SafeAreaView style={tw`flex-1 pb-36`}>
+                    <View style={tw`flex-row m-2 ml-4`}>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'Sales' && styles.activeTab]}
+                            onPress={() => setActiveTab('Sales')}
+                        >
+                            <Text style={styles.tabText}>Sales</Text>
+                        </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={[styles.tab, activeTab === 'Marketing' && styles.activeTab]}
-                    onPress={() => setActiveTab('Marketing')}
-                  >
-                    <Text style={styles.tabText}>Marketing</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.tab, activeTab === 'Service' && styles.activeTab]}
-                    onPress={() => setActiveTab('Service')}
-                  >
-                    <Text style={styles.tabText}>Service</Text>
-                  </TouchableOpacity>
-                </View>
-                <View>{renderContent()}</View>
-            </SafeAreaView>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'Marketing' && styles.activeTab]}
+                            onPress={() => setActiveTab('Marketing')}
+                        >
+                            <Text style={styles.tabText}>Marketing</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'Service' && styles.activeTab]}
+                            onPress={() => setActiveTab('Service')}
+                        >
+                            <Text style={styles.tabText}>Service</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View>{renderContent()}</View>
+                </SafeAreaView>
             </ScrollView>
         );
 };
