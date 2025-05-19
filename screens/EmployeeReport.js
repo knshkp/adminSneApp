@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import axios from 'axios';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import XLSX from 'xlsx';
 import tw from 'twrnc';
 import { Modal } from 'react-native-paper';
 import { Image } from 'react-native';
-
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Linking } from 'react-native';
 import { Dimensions } from 'react-native';
-// import Button from 'react-native-share';
-import { Button } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 const EmployeeTable = () => {
@@ -24,20 +21,23 @@ const EmployeeTable = () => {
   const [serviceType, setServiceType] = useState('All');
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [selectedImageUri, setSelectedImageUri] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedImageUri, setSelectedImageUri] = useState('');
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
       const fetchEmployeeData = async () => {
-        const response = await fetch("https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployee?phone=9694668873");
+        const employeeDetails = await AsyncStorage.getItem('userDetails');
+        const finalEmployee = JSON.parse(employeeDetails);
+        console.log(finalEmployee)
+        const response = await fetch(`https://sangramindustry-i5ws.onrender.com/employeeServices/getEmployee?phone=${finalEmployee.phone_number}`);
         const data = await response.json();
         setEmployees(data.result);
         setFilteredEmployees(data.result);
-        setServiceType('All');   // Reset to 'All'
-        setFromDate(null);       // Clear date filters
+        setServiceType('All');   
+        setFromDate(null);       
         setToDate(null);
         setIsModalVisible(false);
       };
@@ -45,29 +45,20 @@ const EmployeeTable = () => {
       fetchEmployeeData();
     }, [])
   );
-  
-  
-
   useEffect(() => {
     applyFilters();
-  }, [employees, serviceType, fromDate, toDate]); // Whenever data or filters change
-
+  }, [employees, serviceType, fromDate, toDate]);
   const applyFilters = () => {
     let tempData = [...employees];
-
-    // Filter by Service Type
     if (serviceType !== 'All') {
       tempData = tempData.filter(employee => employee.service_type?.toLowerCase() === serviceType.toLowerCase());
     }
-
-    // Filter by Date Range
     if (fromDate && toDate) {
       tempData = tempData.filter(employee => {
         const employeeDate = moment(employee.createdAt);
         return employeeDate.isBetween(moment(fromDate).startOf('day'), moment(toDate).endOf('day'), null, '[]');
       });
     }
-
     setFilteredEmployees(tempData);
   };
 
@@ -120,8 +111,8 @@ const EmployeeTable = () => {
   
     const handleImagePress = () => {
       var ur=item.shop_photo
-      setSelectedImageUri(ur);  // Store the selected image URI
-      setIsModalVisible(true);   // Show the modal
+      setSelectedImageUri(ur);  
+      setIsModalVisible(true);   
     };
     return(
     <View style={styles.row}>
@@ -189,17 +180,6 @@ const EmployeeTable = () => {
             if (selectedDate) setFromDate(selectedDate);
           }}
         />
-    
-
-{/* 
-        <TouchableOpacity
-          style={tw`bg-gray-200 p-2 rounded`}
-          onPress={() => setShowToPicker(true)}
-        >
-          <Text>{toDate ? moment(toDate).format('YYYY-MM-DD') : 'To Date'}</Text>
-        </TouchableOpacity> */}
-
-      {/* {showToPicker && ( */}
         <DateTimePicker
           value={toDate ? new Date(toDate) : new Date()}
           mode="date"
@@ -209,7 +189,6 @@ const EmployeeTable = () => {
             if (selectedDate) setToDate(selectedDate);
           }}
         />
-      {/* )} */}
       </View>
 
       

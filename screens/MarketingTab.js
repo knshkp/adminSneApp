@@ -59,6 +59,7 @@ const MarketingTab = ({
             style={styles.inputd}
             placeholder="Enter Customer Name"
             value={customerName}
+            
             onChangeText={setCustomerName}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
